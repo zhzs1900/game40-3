@@ -436,141 +436,67 @@ export class LanternHUD extends Component {
 
   // 5. 符案三选一升级弹窗
   private createUpgradeModal() {
-    this.upgradeModalNode = new Node('UpgradeModal');
-    this.node.addChild(this.upgradeModalNode);
-    this.upgradeModalNode.active = false;
+    this.upgradeModalNode=new Node('UpgradeModal');this.node.addChild(this.upgradeModalNode);this.upgradeModalNode.active=false;
+    const bgNode=new Node('Bg');this.upgradeModalNode.addChild(bgNode);
+    const bg=bgNode.addComponent(Graphics);bg.fillColor=new Color(7,10,22,225);bg.rect(-360,-640,720,1280);bg.fill();
+    bg.strokeColor=new Color(106,72,129,35);bg.lineWidth=7;
+    for(let i=0;i<7;i++){const y=-420+i*135;bg.moveTo(-340,y);bg.bezierCurveTo(-150,y+35,120,y-45,340,y+15);}bg.stroke();
 
-    // 黑色半透明暗背景
-    const bgNode = new Node('Bg');
-    this.upgradeModalNode.addChild(bgNode);
-    const bg = bgNode.addComponent(Graphics);
-    bg.fillColor = new Color(10, 8, 12, 215);
-    bg.rect(-360, -640, 720, 1280);
-    bg.fill();
+    const tableNode=new Node('Table');tableNode.setPosition(0,30,0);this.upgradeModalNode.addChild(tableNode);
+    const tg=tableNode.addComponent(Graphics);
+    tg.fillColor=new Color(17,29,55,248);tg.moveTo(-282,-190);tg.lineTo(-258,-226);tg.lineTo(244,-226);tg.lineTo(280,-188);
+    tg.lineTo(270,182);tg.lineTo(240,218);tg.lineTo(-244,218);tg.lineTo(-278,184);tg.close();tg.fill();
+    tg.strokeColor=new Color(218,176,87);tg.lineWidth=3.5;tg.moveTo(-267,-181);tg.lineTo(-246,-212);tg.lineTo(233,-212);tg.lineTo(265,-181);
+    tg.lineTo(255,174);tg.lineTo(232,204);tg.lineTo(-233,204);tg.lineTo(-263,174);tg.close();tg.stroke();
+    tg.strokeColor=new Color(172,50,46,190);tg.lineWidth=1.6;
+    tg.moveTo(-220,184);tg.bezierCurveTo(-132,159,-46,194,0,170);tg.bezierCurveTo(56,145,141,189,219,167);tg.stroke();
+    tg.strokeColor=new Color(105,132,167,100);tg.moveTo(-235,-175);tg.bezierCurveTo(-122,-195,114,-192,236,-168);tg.stroke();
 
-    // 符案墨绿台呢底板
-    const tableNode = new Node('Table');
-    tableNode.setPosition(0, 30, 0);
-    this.upgradeModalNode.addChild(tableNode);
-    const tg = tableNode.addComponent(Graphics);
-    tg.fillColor = new Color(20, 31, 58);
-    tg.roundRect(-270, -220, 540, 440, 12);
-    tg.fill();
-    tg.strokeColor = new Color(215, 175, 70);
-    tg.lineWidth = 4;
-    tg.roundRect(-270, -220, 540, 440, 12);
-    tg.stroke();
+    const titleNode=new Node('Title');titleNode.setPosition(0,166,0);tableNode.addChild(titleNode);
+    titleNode.addComponent(UITransform).setContentSize(380,44);
+    const tl=titleNode.addComponent(Label);tl.string='夜巡符契';tl.fontSize=25;tl.lineHeight=30;tl.horizontalAlign=Label.HorizontalAlign.CENTER;tl.verticalAlign=Label.VerticalAlign.CENTER;tl.overflow=Label.Overflow.SHRINK;tl.color=new Color(255,230,150);
 
-    // 标题提示：灵息强化
-    const titleNode = new Node('Title');
-    titleNode.setPosition(0, 160, 0);
-    tableNode.addChild(titleNode);
-    const tl = titleNode.addComponent(Label);
-    tl.string = '—— 夜巡符契 ——';
-    tl.fontSize = 24;
-    tl.color = new Color(255, 230, 150);
+    const titleSeal=new Node('TitleSeal');titleSeal.setPosition(0,130,0);tableNode.addChild(titleSeal);
+    const sg=titleSeal.addComponent(Graphics);sg.strokeColor=new Color(180,51,46,170);sg.lineWidth=1.8;
+    sg.moveTo(-78,0);sg.bezierCurveTo(-38,13,-12,-11,0,0);sg.bezierCurveTo(19,13,48,-11,80,0);sg.stroke();
   }
 
   // 弹出三选一升级符案牌局
   showUpgradeChoices(options: BuffOption[]) {
-    this.upgradeModalNode.active = true;
-    const table = this.upgradeModalNode.getChildByName('Table')!;
+    this.upgradeModalNode.active=true;
+    const table=this.upgradeModalNode.getChildByName('Table')!;
+    for(const oc of table.children.filter(c=>c.name.startsWith('ChoiceCard_')))oc.destroy();
+    const spacing=166;
+    for(let i=0;i<options.length;i++){
+      const opt=options[i],cardNode=new Node(`ChoiceCard_${i}`),offset=(i-1)*spacing;
+      cardNode.setPosition(offset,-24,0);table.addChild(cardNode);
+      const cardTrans=cardNode.addComponent(UITransform);cardTrans.setContentSize(146,238);cardTrans.setAnchorPoint(.5,.5);
+      const cg=cardNode.addComponent(Graphics);
+      cg.fillColor=new Color(237,220,176);cg.moveTo(-67,-102);cg.lineTo(-58,-116);cg.lineTo(56,-113);cg.lineTo(67,-99);cg.lineTo(63,98);cg.lineTo(52,112);cg.lineTo(-55,114);cg.lineTo(-66,100);cg.close();cg.fill();
+      cg.strokeColor=new Color(160,49,45);cg.lineWidth=2.5;cg.moveTo(-61,-97);cg.lineTo(-52,-108);cg.lineTo(51,-106);cg.lineTo(60,-95);cg.lineTo(57,93);cg.lineTo(48,104);cg.lineTo(-50,106);cg.lineTo(-59,95);cg.close();cg.stroke();
+      cg.strokeColor=new Color(205,160,80,185);cg.lineWidth=1.2;cg.moveTo(-48,78);cg.bezierCurveTo(-20,90,19,69,48,82);cg.moveTo(-48,-78);cg.bezierCurveTo(-13,-89,18,-69,48,-82);cg.stroke();
+      cg.strokeColor=new Color(170,50,46,140);cg.lineWidth=1;
+      cg.moveTo(-42,55);cg.bezierCurveTo(-17,43,11,62,41,47);cg.moveTo(-38,-46);cg.bezierCurveTo(-7,-61,18,-38,38,-55);cg.stroke();
 
-    // 移除旧卡
-    const oldCards = table.children.filter(c => c.name.startsWith('ChoiceCard_'));
-    for (const oc of oldCards) oc.destroy();
+      const iconNode=new Node('Icon');iconNode.setPosition(0,60,0);cardNode.addChild(iconNode);iconNode.addComponent(UITransform).setContentSize(90,52);
+      const il=iconNode.addComponent(Label);il.string=opt.icon;il.fontSize=38;il.lineHeight=42;il.horizontalAlign=Label.HorizontalAlign.CENTER;il.verticalAlign=Label.VerticalAlign.CENTER;il.overflow=Label.Overflow.SHRINK;il.color=new Color(181,48,45);
 
-    const spacing = 160;
-    for (let i = 0; i < options.length; i++) {
-      const opt = options[i];
-      const cardNode = new Node(`ChoiceCard_${i}`);
-      const offset = (i - 1) * spacing;
-      cardNode.setPosition(offset, -20, 0);
-      table.addChild(cardNode);
+      const nameNode=new Node('Name');nameNode.setPosition(0,12,0);cardNode.addChild(nameNode);nameNode.addComponent(UITransform).setContentSize(112,42);
+      const nl=nameNode.addComponent(Label);nl.string=opt.name;nl.fontSize=19;nl.lineHeight=22;nl.horizontalAlign=Label.HorizontalAlign.CENTER;nl.verticalAlign=Label.VerticalAlign.CENTER;nl.overflow=Label.Overflow.SHRINK;nl.color=new Color(36,31,35);
 
-      // 设置卡牌精确的触控区域（宽度140，高度230），居中锚点(0.5, 0.5)
-      // 完美覆盖 -70 到 +70、-115 到 +115 的整张卡牌视觉全范围，彻底杜绝下方点不到的问题
-      const cardTrans = cardNode.addComponent(UITransform);
-      cardTrans.setContentSize(140, 230);
-      cardTrans.setAnchorPoint(0.5, 0.5);
+      const descNode=new Node('Desc');descNode.setPosition(0,-54,0);cardNode.addChild(descNode);const descUi=descNode.addComponent(UITransform);descUi.setContentSize(108,72);
+      const dl=descNode.addComponent(Label);dl.string=opt.desc;dl.fontSize=12;dl.lineHeight=16;dl.overflow=Label.Overflow.RESIZE_HEIGHT;dl.horizontalAlign=Label.HorizontalAlign.CENTER;dl.verticalAlign=Label.VerticalAlign.TOP;dl.color=new Color(83,69,62);
 
-      // 符箓造型大按钮
-      const cg = cardNode.addComponent(Graphics);
-      cg.fillColor = new Color(241, 224, 176);
-      cg.roundRect(-65, -110, 130, 220, 8);
-      cg.fill();
-      cg.strokeColor = new Color(173, 52, 45);
-      cg.lineWidth = 2.5;
-      cg.roundRect(-65, -110, 130, 220, 8);
-      cg.stroke();
+      const foot=new Node('FootRune');foot.setPosition(0,-91,0);cardNode.addChild(foot);const fg=foot.addComponent(Graphics);fg.strokeColor=new Color(181,51,46,150);fg.lineWidth=1.4;
+      fg.moveTo(-23,0);fg.bezierCurveTo(-9,8,5,-7,22,1);fg.moveTo(-10,-5);fg.lineTo(10,5);fg.stroke();
 
-      // 图标符记
-      const iconNode = new Node('Icon');
-      iconNode.setPosition(0, 55, 0);
-      cardNode.addChild(iconNode);
-      const il = iconNode.addComponent(Label);
-      il.string = opt.icon;
-      il.fontSize = 38;
-      il.color = new Color(185, 35, 35);
-
-      // 名称（短文本如“跳弹+1”）
-      const nameNode = new Node('Name');
-      nameNode.setPosition(0, 5, 0);
-      cardNode.addChild(nameNode);
-      const nl = nameNode.addComponent(Label);
-      nl.string = opt.name;
-      nl.fontSize = 21;
-      nl.lineHeight = 24;
-      nl.color = new Color(35, 30, 30);
-
-      // 简短描述（自适应卡牌宽度折行）
-      const descNode = new Node('Desc');
-      descNode.setPosition(0, -55, 0);
-      const descUi = descNode.addComponent(UITransform);
-      descUi.setContentSize(110, 60);
-      cardNode.addChild(descNode);
-      const dl = descNode.addComponent(Label);
-      dl.string = opt.desc;
-      dl.fontSize = 12;
-      dl.lineHeight = 15;
-      dl.overflow = Label.Overflow.RESIZE_HEIGHT;
-      dl.horizontalAlign = Label.HorizontalAlign.CENTER;
-      dl.color = new Color(90, 75, 65);
-
-      // 初始翻牌动画（从背面翻开）
-      cardNode.setScale(0.1, 1, 1);
-      tween(cardNode)
-        .delay(i * 0.1)
-        .to(0.2, { scale: new Vec3(1, 1, 1) })
-        .start();
-
-      const selectThis = () => {
-        if (!cardNode.isValid || !this.upgradeModalNode.active) return;
-        cardNode.setScale(1.0, 1.0, 1);
-        LanternSound.inst.playClick();
-        this.upgradeModalNode.active = false;
-        if (this.onSelectBuff) {
-          this.onSelectBuff(opt);
-        }
-      };
-      (cardNode as any).onSelect = selectThis;
-
-      // 绑定父节点触摸与点击反馈
-      cardNode.on(Node.EventType.TOUCH_START, () => {
-        cardNode.setScale(0.96, 0.96, 1);
-      });
-      cardNode.on(Node.EventType.TOUCH_CANCEL, () => {
-        cardNode.setScale(1.0, 1.0, 1);
-      });
-      cardNode.on(Node.EventType.TOUCH_END, () => {
-        selectThis();
-      });
-      cardNode.on('click', selectThis);
-
-      // 子节点也全部绑定触摸委托，确保不论点击牌的下半部文字、图标还是空白处都能100%响应
-      iconNode.on(Node.EventType.TOUCH_END, selectThis);
-      nameNode.on(Node.EventType.TOUCH_END, selectThis);
-      descNode.on(Node.EventType.TOUCH_END, selectThis);
+      cardNode.setScale(.1,1,1);tween(cardNode).delay(i*.1).to(.2,{scale:new Vec3(1,1,1)}).start();
+      const selectThis=()=>{if(!cardNode.isValid||!this.upgradeModalNode.active)return;cardNode.setScale(1,1,1);LanternSound.inst.playClick();this.upgradeModalNode.active=false;if(this.onSelectBuff)this.onSelectBuff(opt);};
+      (cardNode as any).onSelect=selectThis;
+      cardNode.on(Node.EventType.TOUCH_START,()=>cardNode.setScale(.96,.96,1));
+      cardNode.on(Node.EventType.TOUCH_CANCEL,()=>cardNode.setScale(1,1,1));
+      cardNode.on(Node.EventType.TOUCH_END,selectThis);cardNode.on('click',selectThis);
+      iconNode.on(Node.EventType.TOUCH_END,selectThis);nameNode.on(Node.EventType.TOUCH_END,selectThis);descNode.on(Node.EventType.TOUCH_END,selectThis);
     }
   }
 
