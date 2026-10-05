@@ -251,67 +251,64 @@ export class LanternWarden extends Component {
     this.isInvincible = true;
     this.rollTimer = 0.35;
 
-    // 闪避时扬起剧烈的连环沙暴气团
-    for (let i = 0; i < 6; i++) {
-      this.scheduleOnce(() => {
-        if (this.isValid) this.spawnDustPuff();
-      }, i * 0.05);
-    }
-
-    // 自身旋转闪避一圈
-    const spinDeg = dir.x >= 0 ? -360 : 360;
+    // 侧身踏罡：短披风先掀起，身体压低横踏，灯穗与符囊反向甩动
+    tween(this.capeNode)
+      .to(0.08, { angle: dir.x >= 0 ? -48 : 48 })
+      .to(0.22, { angle: dir.x >= 0 ? -16 : 16 })
+      .start();
+    tween(this.holsterNode)
+      .to(0.08, { angle: dir.x >= 0 ? 32 : -32 })
+      .to(0.22, { angle: 0 })
+      .start();
+    const lean = dir.x >= 0 ? -18 : 18;
     tween(this.bodyRoot)
-      .by(0.35, { angle: spinDeg, position: new Vec3(0, 8, 0) }, { easing: 'quadOut' })
-      .to(0.05, { position: new Vec3(0, 0, 0), angle: 0 })
+      .to(0.08, { angle: lean, scale: new Vec3(1.08, 0.82, 1), position: new Vec3(0, -5, 0) })
+      .to(0.18, { angle: -lean * 0.35, scale: new Vec3(0.92, 1.08, 1), position: new Vec3(0, 4, 0) })
+      .to(0.09, { angle: 0, scale: new Vec3(1, 1, 1), position: new Vec3(0, 0, 0) })
       .call(() => {
         if (this.curAction !== 'roll') return;
         this.isInvincible = this.reviveProtectTimer > 0;
         if (onDone) onDone();
-      })
-      .start();
+      }).start();
+
+    for (let i = 0; i < 4; i++) {
+      this.scheduleOnce(() => { if (this.isValid) this.spawnDustPuff(); }, i * 0.06);
+    }
   }
 
   // 放符后坐力动作动画与抛壳
   playShootRecoil() {
     if (this.curAction === 'roll' || this.curAction === 'dead') return;
-
-    // 符灯猛烈后拉并微抬
+    // 抬腕写符：先收腕，再挑腕送符，灯穗同步摆动
+    tween(this.armNode)
+      .to(0.05, { angle: this.armNode.angle - 10, position: new Vec3(4, 9, 0) })
+      .to(0.08, { angle: this.armNode.angle + 7, position: new Vec3(8, 13, 0) })
+      .to(0.10, { position: new Vec3(6, 12, 0) })
+      .start();
     tween(this.gunNode)
-      .to(0.04, { position: new Vec3(10, 4, 0), angle: 18 })
-      .to(0.12, { position: new Vec3(18, 0, 0), angle: 0 }, { easing: 'bounceOut' })
+      .to(0.05, { scale: new Vec3(0.92, 1.08, 1), position: new Vec3(15, 2, 0) })
+      .to(0.12, { scale: new Vec3(1, 1, 1), position: new Vec3(18, 0, 0) })
       .start();
-
-    // 身体微微后仰承受后坐力
-    tween(this.bodyRoot)
-      .to(0.04, { position: new Vec3(-3, 0, 0) })
-      .to(0.1, { position: new Vec3(0, 0, 0) })
-      .start();
-
-    // 抛出跳动旋转的黄铜弹壳
+    tween(this.capeNode).to(0.08,{angle:-12}).to(0.16,{angle:0}).start();
     this.spawnShellCasing();
   }
 
   // 抛出金黄弹壳
   private spawnShellCasing() {
-    const parent = this.node.parent;
-    if (!parent) return;
-
-    const casing = new Node('ShellCasing');
+    const parent = this.node.parent; if (!parent) return;
+    const paper = new Node('LooseTalismanScrap');
     const muzzle = this.getMuzzlePos();
-    casing.setPosition(muzzle.x - 12, muzzle.y + 2, 0);
-    parent.addChild(casing);
-
-    const g = casing.addComponent(Graphics);
-    g.fillColor = new Color(255, 215, 65);
-    g.roundRect(-2.5, -1, 5, 2, 0.5);
-    g.fill();
-
+    paper.setPosition(muzzle.x - 8, muzzle.y + 3, 0); parent.addChild(paper);
+    const g = paper.addComponent(Graphics);
+    g.fillColor = new Color(225, 211, 171, 190);
+    g.moveTo(-3,-4); g.lineTo(3,-3); g.lineTo(4,4); g.lineTo(-2,5); g.close(); g.fill();
+    g.strokeColor = new Color(169,49,45,180); g.lineWidth = 1;
+    g.moveTo(-1,3); g.lineTo(2,-2); g.stroke();
     const facing = this.node.scale.x;
-    tween(casing)
-      .by(0.22, { position: new Vec3(-facing * (18 + Math.random() * 12), 16 + Math.random() * 8, 0), angle: 480 }, { easing: 'quadOut' })
-      .by(0.18, { position: new Vec3(-facing * 8, -32, 0), angle: 240 }, { easing: 'quadIn' })
-      .call(() => casing.destroy())
-      .start();
+    tween(paper)
+      .by(0.24,{position:new Vec3(-facing*(12+Math.random()*10),14+Math.random()*8,0),angle:220},{easing:'quadOut'})
+      .by(0.24,{position:new Vec3(-facing*5,-26,0),angle:160},{easing:'quadIn'})
+      .call(()=>paper.destroy()).start();
   }
 
   // 受到伤害受击
@@ -335,12 +332,13 @@ export class LanternWarden extends Component {
     this.isInvincible = true;
     this.reviveProtectTimer = 0.45;
 
-    // 身体受击震颤
+    // 受击时肩膀收紧、头部偏转，符灯短暂下沉
     tween(this.bodyRoot)
-      .to(0.05, { position: new Vec3(-4, 0, 0) })
-      .to(0.05, { position: new Vec3(3, 0, 0) })
-      .to(0.05, { position: new Vec3(0, 0, 0) })
-      .start();
+      .to(0.05,{angle:-9,scale:new Vec3(1.05,0.94,1),position:new Vec3(-3,-2,0)})
+      .to(0.09,{angle:4,scale:new Vec3(0.97,1.03,1),position:new Vec3(2,1,0)})
+      .to(0.08,{angle:0,scale:new Vec3(1,1,1),position:new Vec3(0,0,0)}).start();
+    tween(this.headNode).to(0.06,{angle:10}).to(0.10,{angle:0}).start();
+    tween(this.gunNode).to(0.06,{position:new Vec3(13,-3,0)}).to(0.10,{position:new Vec3(18,0,0)}).start();
 
     if (this.hp <= 0) {
       this.playDeath();
@@ -377,85 +375,50 @@ export class LanternWarden extends Component {
   // 悲壮倒地死亡动画（帽子飞出、武器脱手、身体倒地）
   private playDeath() {
     this.curAction = 'dead';
-
-    // 身体向后瘫倒
+    // 灯火熄灭：巡夜师先跪落，披风失去张力，符灯光点离体消散
     tween(this.bodyRoot)
-      .to(0.35, { position: new Vec3(-10, -14, 0), angle: -85 }, { easing: 'quadIn' })
-      .start();
-
-    // 巡夜师帽子闪避脱落飞出
-    const flyHat = new Node('FlyHat');
-    this.node.parent?.addChild(flyHat);
-    flyHat.setPosition(this.node.position.x, this.node.position.y + 24, 0);
-    const g = flyHat.addComponent(Graphics);
-    g.fillColor = new Color(68, 40, 22);
-    g.ellipse(0, 0, 23, 6);
-    g.fill();
-    g.fillColor = new Color(82, 48, 26);
-    g.roundRect(-10, 0, 20, 12, 3);
-    g.fill();
-
-    tween(flyHat)
-      .by(0.45, { position: new Vec3(50, 40, 0), angle: 360 }, { easing: 'quadOut' })
-      .by(0.3, { position: new Vec3(25, -60, 0), angle: 180 }, { easing: 'quadIn' })
-      .start();
+      .to(0.22,{position:new Vec3(0,-10,0),angle:-18,scale:new Vec3(1.02,0.92,1)},{easing:'quadIn'})
+      .to(0.34,{position:new Vec3(-10,-20,0),angle:-72,scale:new Vec3(1,1,1)}).start();
+    tween(this.capeNode).to(0.28,{angle:38,scale:new Vec3(1.08,0.9,1)}).start();
+    const ember = new Node('ExtinguishedLantern');
+    ember.setPosition(this.node.position.x+10,this.node.position.y+12,0);
+    this.node.parent?.addChild(ember);
+    const eg=ember.addComponent(Graphics);
+    eg.fillColor=new Color(245,183,79,220);eg.ellipse(0,0,7,11);eg.fill();
+    eg.fillColor=new Color(92,112,145,110);eg.circle(0,0,15);eg.fill();
+    tween(ember).to(0.45,{position:new Vec3(ember.position.x+8,ember.position.y+28,0),scale:new Vec3(0.2,0.2,1)})
+      .call(()=>ember.destroy()).start();
+    const fallen = new Node('FallenTalisman');
+    fallen.setPosition(this.node.position.x-8,this.node.position.y+4,0);this.node.parent?.addChild(fallen);
+    const fg=fallen.addComponent(Graphics);fg.fillColor=new Color(226,212,172,200);
+    fg.moveTo(-5,-9);fg.lineTo(5,-8);fg.lineTo(4,9);fg.lineTo(-6,8);fg.close();fg.fill();
+    tween(fallen).by(0.35,{position:new Vec3(-18,18,0),angle:-150},{easing:'quadOut'})
+      .by(0.25,{position:new Vec3(-8,-28,0),angle:-80},{easing:'quadIn'}).start();
   }
 
   // 生成脚下飞扬的荒野蓬松沙尘群
   private spawnDustPuff() {
-    const parentNode = this.dustRoot.parent || this.node.parent;
-    if (!parentNode) return;
-
-    for (let i = 0; i < 2; i++) {
-      const dNode = new Node('Dust');
-      const side = (Math.random() - 0.5) * 14;
-      dNode.setPosition(this.node.position.x + side, this.node.position.y - 18, 0);
-      parentNode.addChild(dNode);
-
-      const g = dNode.addComponent(Graphics);
-      // 土黄色做旧蓬松烟尘
-      g.fillColor = new Color(210, 185, 145, 160);
-      g.circle(0, 0, 4.5 + Math.random() * 4);
-      g.fill();
-      g.fillColor = new Color(230, 210, 175, 100);
-      g.circle(1, 1, 2.5);
-      g.fill();
-
-      const driftX = -side * 1.5 + (Math.random() - 0.5) * 8;
-      const driftY = 10 + Math.random() * 12;
-
-      tween(dNode)
-        .to(0.32, {
-          position: new Vec3(dNode.position.x + driftX, dNode.position.y + driftY, 0),
-          scale: new Vec3(2.0, 2.0, 1)
-        })
-        .call(() => dNode.destroy())
-        .start();
+    const parentNode=this.dustRoot.parent||this.node.parent;if(!parentNode)return;
+    for(let i=0;i<2;i++){
+      const n=new Node('InkStep');const side=(Math.random()-.5)*12;
+      n.setPosition(this.node.position.x+side,this.node.position.y-18,0);parentNode.addChild(n);
+      const g=n.addComponent(Graphics);
+      g.fillColor=new Color(66,82,109,95);g.ellipse(0,0,5+Math.random()*3,3+Math.random()*2);g.fill();
+      g.strokeColor=new Color(166,50,46,90);g.lineWidth=1;g.moveTo(-4,1);g.bezierCurveTo(0,5,3,-3,7,1);g.stroke();
+      tween(n).to(.3,{position:new Vec3(n.position.x-side,n.position.y+10,0),scale:new Vec3(1.8,1.5,1)})
+        .call(()=>n.destroy()).start();
     }
   }
 
   // 雪茄袅袅青烟
   private spawnCigarSmoke() {
-    const parent = this.node.parent;
-    if (!parent) return;
-
-    const smoke = new Node('CigarSmoke');
-    const facing = this.node.scale.x;
-    smoke.setPosition(this.node.position.x + facing * 8, this.node.position.y + 26, 0);
-    parent.addChild(smoke);
-
-    const g = smoke.addComponent(Graphics);
-    g.fillColor = new Color(230, 230, 235, 120);
-    g.circle(0, 0, 2);
-    g.fill();
-
-    tween(smoke)
-      .to(0.4, {
-        position: new Vec3(smoke.position.x - facing * 6 + (Math.random() - 0.5) * 6, smoke.position.y + 16, 0),
-        scale: new Vec3(2.5, 2.5, 1)
-      })
-      .call(() => smoke.destroy())
-      .start();
+    const parent=this.node.parent;if(!parent)return;
+    const n=new Node('LanternWisp');const facing=this.node.scale.x;
+    n.setPosition(this.node.position.x+facing*12,this.node.position.y+18,0);parent.addChild(n);
+    const g=n.addComponent(Graphics);g.fillColor=new Color(246,190,84,120);
+    g.moveTo(0,5);g.bezierCurveTo(5,1,3,-5,0,-7);g.bezierCurveTo(-3,-3,-3,2,0,5);g.fill();
+    tween(n).to(.4,{position:new Vec3(n.position.x-facing*3,n.position.y+17,0),scale:new Vec3(.45,.45,1)})
+      .call(()=>n.destroy()).start();
   }
 
   // 帧循环驱动呼吸、跑动骨骼姿态、压扁弹起与沙尘
@@ -479,7 +442,7 @@ export class LanternWarden extends Component {
       return;
     }
 
-    // 雪茄袅袅青烟
+    // 符灯灯穗间逸出细小灵火
     this.smokeTimer += dt;
     if (this.smokeTimer >= 0.4) {
       this.smokeTimer = 0;
@@ -490,7 +453,7 @@ export class LanternWarden extends Component {
       this.curAction = 'run';
       this.runTime += dt * 12;
 
-      // 双腿交替大步迈动
+      // 双腿交替踏青石路，衣摆与灯穗产生不同相位摆动
       const legAngle = Math.sin(this.runTime) * 35;
       this.leftLegNode.angle = legAngle;
       this.rightLegNode.angle = -legAngle;
@@ -505,10 +468,10 @@ export class LanternWarden extends Component {
       this.headNode.setPosition(0, 30 + Math.sin(this.runTime * 2) * 1.5, 0);
 
       // 风衣后摆随风大幅剧烈波浪翻卷
-      this.capeNode.angle = -22 - Math.abs(Math.sin(this.runTime)) * 30 + Math.sin(this.runTime * 3) * 6;
+      this.capeNode.angle = -12 - Math.abs(Math.sin(this.runTime)) * 18 + Math.sin(this.runTime * 2.6) * 7;
 
       // 枪套晃动
-      this.holsterNode.angle = Math.sin(this.runTime * 0.8) * 16;
+      this.holsterNode.angle = -Math.sin(this.runTime * 1.15) * 20;
 
       // 脚步扬尘
       this.dustTimer += dt;
@@ -529,7 +492,8 @@ export class LanternWarden extends Component {
 
       this.leftLegNode.angle = 0;
       this.rightLegNode.angle = 0;
-      this.capeNode.angle = Math.sin(this.runTime) * 5;
+      this.capeNode.angle = Math.sin(this.runTime) * 4;
+      this.armNode.setPosition(6, 12 + Math.sin(this.runTime * 0.7) * 1.2, 0);
       this.holsterNode.angle = 0;
     }
   }
