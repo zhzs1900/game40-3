@@ -8,75 +8,32 @@ export class TalismanRenderer {
 
   // 绘制单张精致符箓
   static drawCard(node: Node, card: CardItem, width: number = 80, height: number = 115, isBack: boolean = false) {
-    let g = node.getComponent(Graphics);
-    if (!g) {
-      g = node.addComponent(Graphics);
-    }
-    g.clear();
-
-    const w = width;
-    const h = height;
-    const halfW = w / 2;
-    const halfH = h / 2;
-
-    // 1. 卡牌柔和外阴影
-    g.fillColor = new Color(20, 15, 10, 90);
-    g.roundRect(-halfW + 3, -halfH - 4, w, h, 8);
-    g.fill();
-
-    if (isBack) {
-      // 牌背：复古古镇夜巡酒红暗纹
-      this.drawCardBack(g, halfW, halfH, w, h);
+    const g=node.getComponent(Graphics)||node.addComponent(Graphics);g.clear();
+    const hw=width/2, hh=height/2;
+    // handmade talisman paper with clipped corners
+    g.fillColor=isBack?new Color(45,54,79):new Color(238,221,177);
+    g.moveTo(-hw+7,-hh);g.lineTo(hw-5,-hh+2);g.lineTo(hw,hh-8);g.lineTo(hw-6,hh);g.lineTo(-hw+5,hh-2);g.lineTo(-hw,hh-7);g.close();g.fill();
+    g.strokeColor=isBack?new Color(183,143,79):new Color(166,48,43);g.lineWidth=2;
+    g.moveTo(-hw+6,-hh+5);g.lineTo(hw-6,-hh+7);g.lineTo(hw-5,hh-8);g.lineTo(-hw+7,hh-6);g.close();g.stroke();
+    if(isBack){
+      g.strokeColor=new Color(213,173,88);g.lineWidth=1.5;
+      g.moveTo(-15,25);g.bezierCurveTo(8,18,-12,3,15,-2);g.moveTo(-14,-12);g.bezierCurveTo(0,-22,9,-12,14,-28);g.stroke();
       return;
     }
-
-    // 2. 牌面底色：做旧象牙白
-    g.fillColor = new Color(248, 243, 228);
-    g.roundRect(-halfW, -halfH, w, h, 8);
-    g.fill();
-
-    // 3. 复古双层烫金内框
-    g.strokeColor = new Color(195, 155, 80);
-    g.lineWidth = 1.5;
-    g.roundRect(-halfW + 4, -halfH + 4, w - 8, h - 8, 6);
-    g.stroke();
-
-    g.strokeColor = new Color(225, 195, 125, 150);
-    g.lineWidth = 0.8;
-    g.roundRect(-halfW + 6, -halfH + 6, w - 12, h - 12, 5);
-    g.stroke();
-
-    // 纸张做旧纤维微斑
-    g.fillColor = new Color(220, 210, 190, 80);
-    g.circle(-halfW + 16, halfH - 30, 2);
-    g.circle(halfW - 20, -halfH + 35, 1.8);
-    g.circle(0, halfH - 18, 1.5);
-    g.fill();
-
-    // 4. 四角复古黄铜转角装饰
-    this.drawCornerDeco(g, halfW, halfH);
-
-    // 5. Joker 特殊卡面
-    if (card.isJoker) {
-      this.drawJokerFace(g, halfW, halfH);
-      return;
+    const col=card.suit==='spade'?new Color(67,104,169):card.suit==='heart'?new Color(188,54,46):card.suit==='club'?new Color(54,130,105):new Color(164,126,51);
+    // top category stamp
+    g.fillColor=col;g.roundRect(-hw+8,hh-24,24,14,3);g.fill();
+    this.drawSuitSymbol(g,card.suit,-hw+20,hh-17,5,new Color(247,231,190));
+    // flowing cinnabar rune
+    g.strokeColor=new Color(177,50,45);g.lineWidth=2.2;
+    g.moveTo(-12,hh-30);g.bezierCurveTo(11,hh-23,-14,8,12,4);
+    g.bezierCurveTo(-5,-4,13,-15,-10,-24);g.moveTo(-15,-31);g.lineTo(14,-34);g.stroke();
+    // value remains explicit for combination logic readability
+    this.drawCardValue(g,card.val,hw-15,-hh+18,12,col);
+    if(card.isJoker){
+      g.strokeColor=new Color(219,171,75);g.lineWidth=2;g.circle(0,4,18);g.stroke();
+      g.fillColor=new Color(188,53,47);g.circle(0,4,5);g.fill();
     }
-
-    // 6. 花色颜色与主图案
-    const isRed = card.suit === 'heart' || card.suit === 'diamond';
-    const mainCol = isRed ? new Color(198, 38, 38) : new Color(28, 28, 35);
-    const shadowCol = isRed ? new Color(110, 18, 18, 100) : new Color(0, 0, 0, 80);
-
-    // 中间大花色标志（多层立体阴影与高光内芯）
-    this.drawSuitSymbol(g, card.suit, 0, 0, 20, mainCol, shadowCol);
-
-    // 左上角与右下角小花色
-    this.drawSuitSymbol(g, card.suit, -halfW + 12, halfH - 25, 7, mainCol);
-    this.drawSuitSymbol(g, card.suit, halfW - 12, -halfH + 25, 7, mainCol);
-
-    // 绘制数字标识（A, 2-10, J, Q, K）
-    this.drawCardValue(g, card.val, -halfW + 12, halfH - 12, 10, mainCol);
-    this.drawCardValue(g, card.val, halfW - 12, -halfH + 12, 10, mainCol);
   }
 
   // 牌背绘制
@@ -162,15 +119,16 @@ export class TalismanRenderer {
 
   // 绘制标准扑克花色图形
   static drawSuitSymbol(g: Graphics, suit: SuitType, x: number, y: number, r: number, color: Color, shadow?: Color) {
-    if (shadow) {
-      this.drawSuitShape(g, suit, x + 1, y - 1.5, r, shadow);
+    g.strokeColor=color;g.fillColor=color;g.lineWidth=Math.max(1.3,r*.22);
+    if(suit==='spade'){
+      g.moveTo(x-r*.8,y-r*.7);g.lineTo(x,y+r);g.lineTo(x+r*.1,y+r*.15);g.lineTo(x+r*.75,y+r*.55);g.lineTo(x+r*.2,y-r*.8);g.stroke();
+    } else if(suit==='heart'){
+      g.moveTo(x-r,y);g.bezierCurveTo(x-r*.4,y+r,x+r*.4,y+r,x+r,y);g.bezierCurveTo(x+r*.35,y-r*.8,x-r*.2,y-r*.9,x-r,y);g.stroke();
+    } else if(suit==='club'){
+      g.moveTo(x-r,y-r*.3);g.bezierCurveTo(x-r*.1,y+r*.9,x+r*.2,y-r*.8,x+r,y+r*.2);g.stroke();
+    } else {
+      g.moveTo(x,y+r);g.lineTo(x+r,y);g.lineTo(x,y-r);g.lineTo(x-r,y);g.close();g.stroke();
     }
-    this.drawSuitShape(g, suit, x, y, r, color);
-
-    // 核心高光反光小弧
-    g.fillColor = new Color(255, 255, 255, 90);
-    g.circle(x - r * 0.25, y + r * 0.25, r * 0.2);
-    g.fill();
   }
 
   // 各种花色的矢量线条精细描摹
