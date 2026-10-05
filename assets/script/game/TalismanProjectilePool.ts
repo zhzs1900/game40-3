@@ -38,6 +38,7 @@ export class TalismanProjectilePool extends Component {
 
   private bullets: { node: Node; data: BulletData; hitTargets: Set<Node> }[] = [];
   private particles: ParticleItem[] = [];
+  private tearingDown: boolean = false;
 
   // 命中回调：当飞符命中目标或造成吸血时触发
   public onHitTarget?: (b: BulletData, hitPos: Vec3) => void;
@@ -45,6 +46,7 @@ export class TalismanProjectilePool extends Component {
   public onShakeScreen?: (intensity: number) => void;
 
   onLoad() {
+    this.tearingDown = false;
     if (!this.bullets) this.bullets = [];
     if (!this.particles) this.particles = [];
     this.bulletRoot = new Node('Bullets');
@@ -56,6 +58,7 @@ export class TalismanProjectilePool extends Component {
   // 发射一颗飞符
   spawnBullet(data: BulletData): Node {
     const bNode = new Node('Bullet');
+    if (this.tearingDown || !this.isValid || !this.bulletRoot?.isValid) return bNode;
     bNode.setPosition(data.pos);
     this.bulletRoot.addChild(bNode);
 
@@ -106,7 +109,7 @@ export class TalismanProjectilePool extends Component {
     g.strokeColor=new Color(244,211,127,240);g.lineWidth=3;
     g.moveTo(0,0);g.bezierCurveTo(9,13,18,-10,30,2);g.moveTo(4,-7);g.bezierCurveTo(13,1,20,8,31,-4);g.stroke();
     g.strokeColor=new Color(185,53,47,230);g.lineWidth=2;g.moveTo(8,5);g.lineTo(15,-5);g.lineTo(22,5);g.stroke();
-    tween(fNode).to(0.12,{scale:new Vec3(1.45,1.45,1)}).call(()=>fNode.destroy()).start();
+    tween(fNode).to(0.12,{scale:new Vec3(1.45,1.45,1)}).call(()=>{ if(fNode.isValid) fNode.destroy(); }).start();
     for(let i=0;i<4;i++) this.spawnSmokePuff(new Vec3(pos.x+dir.x*(10+i*4),pos.y+dir.y*(10+i*4),0));
   }
 
@@ -136,7 +139,7 @@ export class TalismanProjectilePool extends Component {
     sg.strokeColor=new Color(126,221,186,230);sg.lineWidth=2.2;
     for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const x=Math.cos(a)*18,y=Math.sin(a)*18;sg.moveTo(0,0);sg.bezierCurveTo(x*.35+4,y*.35-3,x*.7-3,y*.7+4,x,y);}
     sg.stroke(); sg.strokeColor=new Color(238,206,118,190);sg.lineWidth=1;sg.circle(0,0,12);sg.stroke();
-    tween(seal).to(.16,{scale:new Vec3(1.55,1.55,1),angle:25}).call(()=>seal.destroy()).start();
+    tween(seal).to(.16,{scale:new Vec3(1.55,1.55,1),angle:25}).call(()=>{ if(seal.isValid) seal.destroy(); }).start();
     for(let i=0;i<7;i++){
       const n=new Node('WindRuneShard');n.setPosition(pos);this.fxRoot.addChild(n);
       const g=n.addComponent(Graphics);g.strokeColor=i%2?new Color(132,225,194):new Color(237,197,102);g.lineWidth=1.7;
@@ -172,7 +175,7 @@ export class TalismanProjectilePool extends Component {
     const bg=slash.addComponent(Graphics);bg.strokeColor=new Color(sparkCol.r,sparkCol.g,sparkCol.b,230);bg.lineWidth=3;
     bg.moveTo(-15,-8);bg.bezierCurveTo(-5,8,8,-10,18,5);bg.moveTo(-9,9);bg.bezierCurveTo(0,-4,9,8,15,-6);bg.stroke();
     bg.strokeColor=new Color(255,245,207,200);bg.lineWidth=1.2;bg.moveTo(-6,-2);bg.lineTo(11,2);bg.stroke();
-    tween(slash).to(.13,{scale:new Vec3(1.45,.72,1)}).call(()=>slash.destroy()).start();
+    tween(slash).to(.13,{scale:new Vec3(1.45,.72,1)}).call(()=>{ if(slash.isValid) slash.destroy(); }).start();
     const oppRad=Math.atan2(-dir.y,-dir.x);
     for(let i=0;i<6;i++){
       const n=new Node('ImpactRune');n.setPosition(pos);this.fxRoot.addChild(n);
@@ -193,11 +196,12 @@ export class TalismanProjectilePool extends Component {
     g.moveTo(-18,-10);g.lineTo(-6,-3);g.lineTo(-10,2);g.lineTo(6,4);g.lineTo(2,9);g.lineTo(17,13);g.stroke();
     g.strokeColor=new Color(112,77,180,150);g.lineWidth=2;
     g.moveTo(-21,7);g.bezierCurveTo(-8,15,7,-11,21,-4);g.stroke();
-    tween(n).to(.14,{scale:new Vec3(1.55,.7,1),angle:8}).call(()=>n.destroy()).start();
+    tween(n).to(.14,{scale:new Vec3(1.55,.7,1),angle:8}).call(()=>{ if(n.isValid) n.destroy(); }).start();
   }
 
   // 火印吸血血色灵光（小红心从受击处飞向主角，并融入体内）
   playVampireFly(startPos: Vec3, targetNode: Node, onReach?: () => void) {
+    if (this.tearingDown || !this.fxRoot?.isValid || !targetNode?.isValid) return;
     const heartNode = new Node('VampireSpirit');
     heartNode.setPosition(startPos);
     this.fxRoot.addChild(heartNode);
@@ -211,7 +215,7 @@ export class TalismanProjectilePool extends Component {
     g.close();
     g.fill();
 
-    const tPos = targetNode.position;
+    const tPos = targetNode.position.clone();
     const midPos = new Vec3(
       (startPos.x + tPos.x) / 2 + (Math.random() - 0.5) * 60,
       (startPos.y + tPos.y) / 2 + 50,
@@ -222,8 +226,8 @@ export class TalismanProjectilePool extends Component {
       .to(0.2, { position: midPos, scale: new Vec3(1.3, 1.3, 1) }, { easing: 'quadOut' })
       .to(0.22, { position: tPos, scale: new Vec3(0.3, 0.3, 1) }, { easing: 'quadIn' })
       .call(() => {
-        heartNode.destroy();
-        if (onReach) onReach();
+        if (heartNode.isValid) heartNode.destroy();
+        if (!this.tearingDown && this.isValid && onReach) onReach();
       })
       .start();
   }
@@ -273,7 +277,7 @@ export class TalismanProjectilePool extends Component {
       .to(0.08, { scale: new Vec3(1.25, 1.25, 1) })
       .by(0.32, { position: new Vec3(0, 28, 0) })
       .to(0.12, { scale: new Vec3(0, 0, 1) })
-      .call(() => numNode.destroy())
+      .call(() => { if (numNode.isValid) numNode.destroy(); })
       .start();
   }
 
@@ -410,7 +414,7 @@ export class TalismanProjectilePool extends Component {
     const g=n.addComponent(Graphics);
     const c=suit==='spade'?new Color(112,157,221,120):suit==='heart'?new Color(226,83,60,120):suit==='club'?new Color(91,184,151,120):new Color(224,190,102,120);
     g.strokeColor=c;g.lineWidth=2;g.moveTo(0,0);g.bezierCurveTo(-dir.x*8+2,-dir.y*8+3,-dir.x*14-2,-dir.y*14-2,-dir.x*20,-dir.y*20);g.stroke();
-    tween(n).to(.2,{scale:new Vec3(.35,.35,1)}).call(()=>n.destroy()).start();
+    tween(n).to(.2,{scale:new Vec3(.35,.35,1)}).call(()=>{ if(n.isValid) n.destroy(); }).start();
   }
 
   // 获得当前活跃飞符列表以供碰撞检测
@@ -422,7 +426,7 @@ export class TalismanProjectilePool extends Component {
   removeBullet(index: number) {
     if (index >= 0 && index < this.bullets.length) {
       const b = this.bullets[index];
-      b.node.destroy();
+      if (b?.node?.isValid) b.node.destroy();
       this.bullets.splice(index, 1);
     }
   }
@@ -461,5 +465,15 @@ export class TalismanProjectilePool extends Component {
       }
     }
     this.particles = [];
+  }
+
+  onDestroy() {
+    // Parent destruction already owns node cleanup; only release references here.
+    this.tearingDown = true;
+    this.bullets = [];
+    this.particles = [];
+    this.onHitTarget = undefined;
+    this.onVampireHeal = undefined;
+    this.onShakeScreen = undefined;
   }
 }
