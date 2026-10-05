@@ -131,55 +131,35 @@ export class TalismanProjectilePool extends Component {
   // 产生跳弹火花（风印或硬物反弹）
   playBounceSparks(pos: Vec3) {
     LanternSound.inst.playBounce();
-    for (let i = 0; i < 6; i++) {
-      const spNode = new Node('Spark');
-      spNode.setPosition(pos);
-      this.fxRoot.addChild(spNode);
-
-      const g = spNode.addComponent(Graphics);
-      g.fillColor = new Color(255, 230, 120);
-      g.circle(0, 0, 2);
-      g.fill();
-
-      const ang = Math.random() * Math.PI * 2;
-      const spd = 100 + Math.random() * 120;
-      this.particles.push({
-        node: spNode,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd,
-        rotSpd: 0,
-        life: 0,
-        maxLife: 0.22,
-        color: new Color(255, 230, 120),
-        size: 2
-      });
+    const seal = new Node('WindSealCrack'); seal.setPosition(pos); this.fxRoot.addChild(seal);
+    const sg=seal.addComponent(Graphics);
+    sg.strokeColor=new Color(126,221,186,230);sg.lineWidth=2.2;
+    for(let i=0;i<5;i++){const a=i*Math.PI*2/5;const x=Math.cos(a)*18,y=Math.sin(a)*18;sg.moveTo(0,0);sg.bezierCurveTo(x*.35+4,y*.35-3,x*.7-3,y*.7+4,x,y);}
+    sg.stroke(); sg.strokeColor=new Color(238,206,118,190);sg.lineWidth=1;sg.circle(0,0,12);sg.stroke();
+    tween(seal).to(.16,{scale:new Vec3(1.55,1.55,1),angle:25}).call(()=>seal.destroy()).start();
+    for(let i=0;i<7;i++){
+      const n=new Node('WindRuneShard');n.setPosition(pos);this.fxRoot.addChild(n);
+      const g=n.addComponent(Graphics);g.strokeColor=i%2?new Color(132,225,194):new Color(237,197,102);g.lineWidth=1.7;
+      g.moveTo(-5,-2);g.bezierCurveTo(-1,5,3,-5,7,2);g.moveTo(-2,4);g.lineTo(3,-4);g.stroke();
+      const ang=Math.random()*Math.PI*2,spd=90+Math.random()*130;
+      this.particles.push({node:n,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,rotSpd:(Math.random()-.5)*420,life:0,maxLife:.28,color:new Color(150,220,190),size:4});
     }
   }
 
   // 产生木屑飞溅（击中箱子掩体）
   playWoodSplinters(pos: Vec3) {
-    for (let i = 0; i < 8; i++) {
-      const wNode = new Node('Wood');
-      wNode.setPosition(pos);
-      this.fxRoot.addChild(wNode);
-
-      const g = wNode.addComponent(Graphics);
-      g.fillColor = new Color(150, 95, 45);
-      g.rect(-2, -1, 4, 2);
-      g.fill();
-
-      const ang = Math.random() * Math.PI * 2;
-      const spd = 80 + Math.random() * 100;
-      this.particles.push({
-        node: wNode,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd,
-        rotSpd: (Math.random() - 0.5) * 500,
-        life: 0,
-        maxLife: 0.35,
-        color: new Color(150, 95, 45),
-        size: 3
-      });
+    for(let i=0;i<9;i++){
+      const n=new Node('SealCabinetSplinter');n.setPosition(pos);this.fxRoot.addChild(n);
+      const g=n.addComponent(Graphics);
+      if(i%3===0){
+        g.fillColor=new Color(226,211,169,220);g.moveTo(-3,-7);g.lineTo(4,-5);g.lineTo(2,7);g.lineTo(-5,5);g.close();g.fill();
+        g.strokeColor=new Color(169,49,45);g.lineWidth=1;g.moveTo(-1,4);g.lineTo(2,-4);g.stroke();
+      }else{
+        g.fillColor=new Color(123,76,43);g.moveTo(-6,-1);g.lineTo(5,-3);g.lineTo(8,1);g.lineTo(-4,3);g.close();g.fill();
+        g.strokeColor=new Color(192,129,64);g.lineWidth=1;g.moveTo(-3,0);g.lineTo(5,-1);g.stroke();
+      }
+      const ang=Math.random()*Math.PI*2,spd=85+Math.random()*115;
+      this.particles.push({node:n,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd+30,rotSpd:(Math.random()-.5)*520,life:0,maxLife:.42,color:new Color(150,95,45),size:4});
     }
   }
 
@@ -188,56 +168,32 @@ export class TalismanProjectilePool extends Component {
 
   // 命中金属火星飞溅
   playHitSparks(pos: Vec3, dir: Vec3, sparkCol: Color = new Color(239, 197, 111)) {
-    const oppRad = Math.atan2(-dir.y, -dir.x);
-    for (let i = 0; i < 5; i++) {
-      const spNode = new Node('HitSpark');
-      spNode.setPosition(pos);
-      this.fxRoot.addChild(spNode);
-
-      const g = spNode.addComponent(Graphics);
-      g.fillColor = sparkCol;
-      g.circle(0, 0, 2);
-      g.fill();
-
-      const spread = (Math.random() - 0.5) * 1.2;
-      const ang = oppRad + spread;
-      const spd = 120 + Math.random() * 140;
-
-      this.particles.push({
-        node: spNode,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd,
-        rotSpd: 0,
-        life: 0,
-        maxLife: 0.18,
-        color: sparkCol,
-        size: 2
-      });
+    const slash=new Node('ImpactBrush');slash.setPosition(pos);slash.angle=Math.atan2(dir.y,dir.x)*180/Math.PI;this.fxRoot.addChild(slash);
+    const bg=slash.addComponent(Graphics);bg.strokeColor=new Color(sparkCol.r,sparkCol.g,sparkCol.b,230);bg.lineWidth=3;
+    bg.moveTo(-15,-8);bg.bezierCurveTo(-5,8,8,-10,18,5);bg.moveTo(-9,9);bg.bezierCurveTo(0,-4,9,8,15,-6);bg.stroke();
+    bg.strokeColor=new Color(255,245,207,200);bg.lineWidth=1.2;bg.moveTo(-6,-2);bg.lineTo(11,2);bg.stroke();
+    tween(slash).to(.13,{scale:new Vec3(1.45,.72,1)}).call(()=>slash.destroy()).start();
+    const oppRad=Math.atan2(-dir.y,-dir.x);
+    for(let i=0;i<6;i++){
+      const n=new Node('ImpactRune');n.setPosition(pos);this.fxRoot.addChild(n);
+      const g=n.addComponent(Graphics);g.strokeColor=sparkCol;g.lineWidth=1.5;
+      g.moveTo(-4,0);g.lineTo(0,5);g.lineTo(3,-3);g.moveTo(-1,-4);g.lineTo(5,2);g.stroke();
+      const ang=oppRad+(Math.random()-.5)*1.25,spd=115+Math.random()*150;
+      this.particles.push({node:n,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd,rotSpd:(Math.random()-.5)*300,life:0,maxLife:.2,color:sparkCol,size:3});
     }
   }
 
   // 雷印穿透紫暗裂缝斩光
   playSpadeSlash(pos: Vec3) {
-    const sNode = new Node('SpadeSlash');
-    sNode.setPosition(pos);
-    this.fxRoot.addChild(sNode);
-
-    const g = sNode.addComponent(Graphics);
-    g.strokeColor = new Color(160, 90, 255, 230);
-    g.lineWidth = 3;
-    g.moveTo(-18, -12);
-    g.lineTo(18, 12);
-    g.stroke();
-    g.strokeColor = new Color(255, 255, 255);
-    g.lineWidth = 1.2;
-    g.moveTo(-12, -8);
-    g.lineTo(12, 8);
-    g.stroke();
-
-    tween(sNode)
-      .to(0.12, { scale: new Vec3(1.4, 0.2, 1) })
-      .call(() => sNode.destroy())
-      .start();
+    const n=new Node('ThunderSealRift');n.setPosition(pos);this.fxRoot.addChild(n);
+    const g=n.addComponent(Graphics);
+    g.strokeColor=new Color(134,174,244,235);g.lineWidth=3.4;
+    g.moveTo(-24,-13);g.lineTo(-9,-3);g.lineTo(-15,4);g.lineTo(2,0);g.lineTo(-2,12);g.lineTo(22,16);g.stroke();
+    g.strokeColor=new Color(244,242,210,230);g.lineWidth=1.2;
+    g.moveTo(-18,-10);g.lineTo(-6,-3);g.lineTo(-10,2);g.lineTo(6,4);g.lineTo(2,9);g.lineTo(17,13);g.stroke();
+    g.strokeColor=new Color(112,77,180,150);g.lineWidth=2;
+    g.moveTo(-21,7);g.bezierCurveTo(-8,15,7,-11,21,-4);g.stroke();
+    tween(n).to(.14,{scale:new Vec3(1.55,.7,1),angle:8}).call(()=>n.destroy()).start();
   }
 
   // 火印吸血血色灵光（小红心从受击处飞向主角，并融入体内）
@@ -274,33 +230,15 @@ export class TalismanProjectilePool extends Component {
 
   // 击杀敌人爆出金色灵息钱币飞散
   playCoinDrop(pos: Vec3, count: number = 3) {
-    for (let i = 0; i < count; i++) {
-      const cNode = new Node('CoinDrop');
-      cNode.setPosition(pos);
-      this.fxRoot.addChild(cNode);
-
-      const g = cNode.addComponent(Graphics);
-      g.fillColor = new Color(255, 215, 60);
-      g.circle(0, 0, 5);
-      g.fill();
-      g.strokeColor = new Color(180, 120, 20);
-      g.lineWidth = 1.2;
-      g.circle(0, 0, 5);
-      g.stroke();
-
-      const ang = (Math.PI / 4) + (i * Math.PI) / count + (Math.random() - 0.5) * 0.4;
-      const spd = 90 + Math.random() * 80;
-
-      this.particles.push({
-        node: cNode,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd,
-        rotSpd: (Math.random() - 0.5) * 400,
-        life: 0,
-        maxLife: 0.55,
-        color: new Color(255, 215, 60),
-        size: 5
-      });
+    for(let i=0;i<count;i++){
+      const n=new Node('SpiritFireShard');n.setPosition(pos);this.fxRoot.addChild(n);
+      const g=n.addComponent(Graphics);
+      g.fillColor=new Color(245,189,81,220);
+      g.moveTo(0,9);g.bezierCurveTo(8,3,6,-6,0,-10);g.bezierCurveTo(-7,-4,-6,4,0,9);g.fill();
+      g.fillColor=new Color(255,235,169,235);g.moveTo(0,5);g.bezierCurveTo(3,1,3,-3,0,-6);g.bezierCurveTo(-3,-2,-3,2,0,5);g.fill();
+      g.strokeColor=new Color(184,61,47,180);g.lineWidth=1;g.moveTo(-3,1);g.lineTo(3,-2);g.stroke();
+      const ang=Math.PI/4+(i*Math.PI)/Math.max(1,count)+(Math.random()-.5)*.5,spd=85+Math.random()*90;
+      this.particles.push({node:n,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd+45,rotSpd:(Math.random()-.5)*180,life:0,maxLife:.62,color:new Color(245,189,81),size:6});
     }
   }
 
@@ -341,87 +279,28 @@ export class TalismanProjectilePool extends Component {
 
   // 灵印或葫芦重型爆炸（真实古镇夜巡朱砂爆轰：火球白核、黑烟破片与泥石飞溅，告别突兀单线圆圈）
   playExplosion(pos: Vec3, radius: number = 80) {
-    const expNode = new Node('SealBurst');
-    expNode.setPosition(pos);
-    this.fxRoot.addChild(expNode);
-
-    const g = expNode.addComponent(Graphics);
-
-    // 绘制多瓣爆轰烈焰团（外层深橙赤红，内层耀金，核心白炽）
-    const petCount = 7;
-    // 1. 外层爆轰赤焰多边形
-    g.fillColor = new Color(235, 65, 20, 210);
-    for (let i = 0; i < petCount; i++) {
-      const a = (i * Math.PI * 2) / petCount;
-      const r = radius * (0.65 + Math.random() * 0.25);
-      const px = Math.cos(a) * r;
-      const py = Math.sin(a) * r;
-      if (i === 0) g.moveTo(px, py);
-      else g.lineTo(px, py);
-    }
-    g.close();
-    g.fill();
-
-    // 2. 中层浓郁炽金火球
-    g.fillColor = new Color(255, 175, 35, 230);
-    for (let i = 0; i < petCount; i++) {
-      const a = (i * Math.PI * 2) / petCount + 0.3;
-      const r = radius * 0.45;
-      const px = Math.cos(a) * r;
-      const py = Math.sin(a) * r;
-      if (i === 0) g.moveTo(px, py);
-      else g.lineTo(px, py);
-    }
-    g.close();
-    g.fill();
-
-    // 3. 核心白炽爆轰火核
-    g.fillColor = new Color(255, 255, 230, 255);
-    g.circle(0, 0, radius * 0.22);
-    g.fill();
-
-    // 屏幕轻微震颤
-    if (this.onShakeScreen) {
-      this.onShakeScreen(6);
-    }
-
-    // 通过标准 tween 快速膨胀后消散，确保时间一到 100% 干净销毁，绝不在地面残留任何线条或圆圈
-    expNode.setScale(0.3, 0.3, 1);
-    tween(expNode)
-      .to(0.08, { scale: new Vec3(1.15, 1.15, 1) }, { easing: 'quadOut' })
-      .to(0.14, { scale: new Vec3(1.35, 1.35, 1) }, { easing: 'quadIn' })
-      .call(() => {
-        if (expNode.isValid) expNode.destroy();
-      })
-      .start();
-
-    // 炸出碎土飞石与黑灰朱砂烟雾
-    for (let i = 0; i < 8; i++) {
-      this.spawnSmokePuff(new Vec3(pos.x + (Math.random() - 0.5) * 35, pos.y + (Math.random() - 0.5) * 35, 0));
-    }
-
-    // 飞溅炽热爆破弹片火星
-    for (let i = 0; i < 8; i++) {
-      const spNode = new Node('ExpSpark');
-      spNode.setPosition(pos);
-      this.fxRoot.addChild(spNode);
-      const spg = spNode.addComponent(Graphics);
-      spg.fillColor = new Color(255, 200, 50);
-      spg.circle(0, 0, 2.5);
-      spg.fill();
-
-      const ang = (i * Math.PI * 2) / 8 + (Math.random() - 0.5) * 0.4;
-      const spd = 140 + Math.random() * 120;
-      this.particles.push({
-        node: spNode,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd,
-        rotSpd: 0,
-        life: 0,
-        maxLife: 0.28,
-        color: new Color(255, 200, 50),
-        size: 2.5
-      });
+    const expNode=new Node('SealBurst');expNode.setPosition(pos);this.fxRoot.addChild(expNode);
+    const g=expNode.addComponent(Graphics);
+    const petals=11;
+    g.fillColor=new Color(173,48,45,220);
+    for(let i=0;i<petals;i++){const a=i*Math.PI*2/petals;const rr=radius*(.58+(i%3)*.08+Math.random()*.08);const x=Math.cos(a)*rr,y=Math.sin(a)*rr;if(i===0)g.moveTo(x,y);else g.lineTo(x,y);}g.close();g.fill();
+    g.fillColor=new Color(247,151,55,235);
+    for(let i=0;i<9;i++){const a=i*Math.PI*2/9+.18;const rr=radius*(i%2?.38:.48);const x=Math.cos(a)*rr,y=Math.sin(a)*rr;if(i===0)g.moveTo(x,y);else g.lineTo(x,y);}g.close();g.fill();
+    g.fillColor=new Color(255,238,178,245);
+    g.moveTo(0,radius*.3);g.bezierCurveTo(radius*.27,radius*.14,radius*.19,-radius*.18,0,-radius*.28);g.bezierCurveTo(-radius*.22,-radius*.12,-radius*.25,radius*.14,0,radius*.3);g.fill();
+    g.strokeColor=new Color(255,225,145,220);g.lineWidth=2;
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;g.moveTo(Math.cos(a)*radius*.24,Math.sin(a)*radius*.24);g.bezierCurveTo(Math.cos(a+.2)*radius*.45,Math.sin(a+.2)*radius*.45,Math.cos(a-.16)*radius*.7,Math.sin(a-.16)*radius*.7,Math.cos(a)*radius*.92,Math.sin(a)*radius*.92);}g.stroke();
+    if(this.onShakeScreen)this.onShakeScreen(6);
+    expNode.setScale(.25,.25,1);
+    tween(expNode).to(.07,{scale:new Vec3(1.08,1.08,1),angle:6},{easing:'quadOut'}).to(.13,{scale:new Vec3(1.35,1.35,1),angle:-4}).call(()=>{if(expNode.isValid)expNode.destroy();}).start();
+    for(let i=0;i<10;i++)this.spawnSmokePuff(new Vec3(pos.x+(Math.random()-.5)*42,pos.y+(Math.random()-.5)*42,0));
+    for(let i=0;i<10;i++){
+      const n=new Node('BurningPaperShard');n.setPosition(pos);this.fxRoot.addChild(n);
+      const pg=n.addComponent(Graphics);pg.fillColor=i%2?new Color(244,178,71):new Color(207,64,45);
+      pg.moveTo(-3,-6);pg.lineTo(5,-3);pg.lineTo(2,6);pg.lineTo(-5,3);pg.close();pg.fill();
+      pg.strokeColor=new Color(255,229,157,180);pg.lineWidth=.8;pg.moveTo(-1,3);pg.lineTo(2,-3);pg.stroke();
+      const a=i*Math.PI*2/10+(Math.random()-.5)*.3,spd=140+Math.random()*130;
+      this.particles.push({node:n,vx:Math.cos(a)*spd,vy:Math.sin(a)*spd+35,rotSpd:(Math.random()-.5)*480,life:0,maxLife:.34,color:new Color(244,178,71),size:4});
     }
   }
 
@@ -450,6 +329,12 @@ export class TalismanProjectilePool extends Component {
       const nextX = pos.x + b.data.dir.x * b.data.spd * dt;
       const nextY = pos.y + b.data.dir.y * b.data.spd * dt;
       b.node.setPosition(nextX, nextY, 0);
+      if (b.data.isHero) {
+        const flutter = Math.sin((b.data.lifeTime * 19) + i) * (b.data.combo === 'straight' ? 4 : 7);
+        b.node.angle = (Math.atan2(b.data.dir.y,b.data.dir.x)*180)/Math.PI + flutter;
+        const breathe = 1 + Math.sin(b.data.lifeTime*24+i)*0.045;
+        b.node.setScale(breathe,1/breathe,1);
+      }
 
       // 导弹喷射金红尾焰与朱砂浓烟拖尾（重炮、灵印爆炸、顺子高速弹、葫芦重弹）
       if (needTrail && b.data.isHero && (b.data.blastR > 0 || b.data.combo === 'fullhouse' || b.data.combo === 'straight')) {
