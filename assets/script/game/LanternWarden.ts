@@ -524,4 +524,10 @@ export class LanternWarden extends Component {
       this.holsterNode.angle = 0;
     }
   }
+  onDestroy() {
+    this.unscheduleAllCallbacks();
+    this.isInvincible = false;
+    this.rollTimer = 0;
+    this.reviveProtectTimer = 0;
+  }
 }
