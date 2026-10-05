@@ -53,10 +53,10 @@ export class NightTownWorld extends Component {
   // 构建关卡场景（根据1-8关主题定制）
   buildStage(level: number) {
     this.curLevel = level;
-    this.bgGraphicsRoot.removeAllChildren();
-    this.decoRoot.removeAllChildren();
-    this.dynamicRoot.removeAllChildren();
-    this.obstacleRoot.removeAllChildren();
+    for (const root of [this.bgGraphicsRoot, this.decoRoot, this.dynamicRoot, this.obstacleRoot]) {
+      for (const child of [...root.children]) if (child.isValid) child.destroy();
+      root.removeAllChildren();
+    }
     this.obstacles = [];
     this.tumbleNode = undefined;
     this.lanternNode = undefined;
@@ -311,5 +311,15 @@ export class NightTownWorld extends Component {
       return true;
     }
     return false;
+  }
+  onDestroy() {
+    this.onBoxBreak = undefined;
+    this.obstacles = [];
+    this.windCharmNodes = [];
+    this.spiritMistNodes = [];
+    this.tumbleNode = undefined;
+    this.lanternNode = undefined;
+    this.doorsNode = undefined;
+    this.steamNode = undefined;
   }
 }
