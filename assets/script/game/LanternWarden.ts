@@ -25,7 +25,7 @@ export class LanternWarden extends Component {
   // 基础属性
   public hp: number = 85;
   public maxHp: number = 85;
-  public shield: number = 10; // 开局穿戴牛皮防弹背心
+  public shield: number = 10; // 开局具有护身符形成的护身值
   public moveSpd: number = 220;
   public isInvincible: boolean = false; // 闪避或受击保护期间无敌
 
@@ -139,14 +139,27 @@ export class LanternWarden extends Component {
   // 绘制躯干（亚麻开领衬衫、做旧皮背心、立体飞符带）
   private drawTorso(node: Node) {
     const g=node.addComponent(Graphics);g.clear();
-    g.fillColor=new Color(228,219,192);g.roundRect(-10,-5,20,26,4);g.fill();
-    g.fillColor=new Color(42,57,88);g.moveTo(-11,20);g.lineTo(-2,20);g.lineTo(0,4);g.lineTo(-10,-4);g.close();g.fill();
-    g.moveTo(11,20);g.lineTo(2,20);g.lineTo(0,4);g.lineTo(10,-4);g.close();g.fill();
-    g.strokeColor=new Color(170,50,45);g.lineWidth=2;g.moveTo(-1,18);g.bezierCurveTo(-6,12,5,9,-2,3);g.bezierCurveTo(4,0,-4,-3,3,-6);g.stroke();
-    g.fillColor=new Color(173,53,47);g.rect(-11,-5,22,4);g.fill();
-    g.strokeColor=new Color(218,176,93);g.lineWidth=1.4;g.moveTo(-9,-2);g.lineTo(9,-2);g.stroke();
-    g.fillColor=new Color(220,197,139);g.roundRect(-14,-4,7,12,2);g.fill();
-    g.strokeColor=new Color(173,53,47);g.lineWidth=1;g.moveTo(-12,5);g.lineTo(-8,-1);g.stroke();
+    // 里层交领衣襟
+    g.fillColor=new Color(230,219,190);
+    g.moveTo(-11,20);g.bezierCurveTo(-13,12,-12,-1,-8,-8);g.lineTo(8,-8);g.bezierCurveTo(12,-1,13,12,11,20);g.close();g.fill();
+    g.strokeColor=new Color(181,160,122);g.lineWidth=1;g.moveTo(-8,15);g.lineTo(1,4);g.lineTo(8,13);g.stroke();
+    // 靛蓝短褂双层翻领
+    g.fillColor=new Color(40,56,87);g.moveTo(-12,21);g.lineTo(-3,21);g.lineTo(1,5);g.lineTo(-9,-5);g.lineTo(-14,4);g.close();g.fill();
+    g.moveTo(12,21);g.lineTo(3,21);g.lineTo(-1,5);g.lineTo(9,-5);g.lineTo(14,4);g.close();g.fill();
+    g.fillColor=new Color(56,72,105);g.moveTo(-11,17);g.lineTo(-4,18);g.lineTo(0,7);g.lineTo(-7,1);g.close();g.fill();
+    // 朱砂束带与铜扣
+    g.fillColor=new Color(172,51,46);g.moveTo(-13,-4);g.lineTo(13,-4);g.lineTo(11,-9);g.lineTo(-12,-9);g.close();g.fill();
+    g.fillColor=new Color(218,174,86);g.moveTo(-3,-3);g.lineTo(4,-3);g.lineTo(5,-9);g.lineTo(-4,-9);g.close();g.fill();
+    // 斜挎符带：分格符囊与纸符露头
+    g.strokeColor=new Color(103,68,49);g.lineWidth=3;g.moveTo(-10,17);g.lineTo(12,-9);g.stroke();
+    for(let i=0;i<3;i++){
+      const x=-5+i*7,y=8-i*8;g.fillColor=new Color(113,76,50);g.roundRect(x-4,y-5,8,9,2);g.fill();
+      g.fillColor=new Color(225,208,165);g.moveTo(x-2,y+3);g.lineTo(x+3,y+2);g.lineTo(x+2,y+8);g.lineTo(x-2,y+7);g.close();g.fill();
+      g.strokeColor=new Color(173,49,45);g.lineWidth=.8;g.moveTo(x-1,y+6);g.lineTo(x+2,y+4);g.stroke();
+    }
+    // 衣料暗褶
+    g.strokeColor=new Color(107,123,151,140);g.lineWidth=1;
+    g.moveTo(-7,0);g.bezierCurveTo(-3,-4,-1,-1,2,-6);g.moveTo(5,15);g.bezierCurveTo(8,9,6,3,10,-1);g.stroke();
   }
 
   // 绘制腰间皮枪套（大腿系腿皮绳与雕花铜带扣）
@@ -161,49 +174,63 @@ export class LanternWarden extends Component {
   // 绘制巡夜师眉眼、束发、发冠与灯穗细节
   private drawHead(node: Node) {
     const g=node.addComponent(Graphics);g.clear();
-    g.fillColor=new Color(228,181,145);g.roundRect(-7,-4,14,15,4);g.fill();
-    g.strokeColor=new Color(48,36,33);g.lineWidth=1.4;g.moveTo(-5,6);g.lineTo(-1,7);g.moveTo(1,7);g.lineTo(5,6);g.stroke();
-    g.fillColor=new Color(28,27,31);g.circle(-2.6,4.2,1);g.circle(2.6,4.2,1);g.fill();
-    g.strokeColor=new Color(131,70,52);g.lineWidth=1;g.moveTo(-2,-1);g.bezierCurveTo(0,-2,2,-2,4,-1);g.stroke();
-    g.fillColor=new Color(27,31,43);g.moveTo(-8,10);g.bezierCurveTo(-6,20,-2,23,0,25);g.bezierCurveTo(4,22,8,18,8,10);g.close();g.fill();
-    g.fillColor=new Color(35,39,54);g.ellipse(0,11,15,3);g.fill();
-    g.strokeColor=new Color(177,52,46);g.lineWidth=2;g.moveTo(-7,13);g.lineTo(7,13);g.stroke();
-    g.strokeColor=new Color(216,174,91);g.lineWidth=1.2;g.moveTo(7,17);g.bezierCurveTo(13,22,13,27,10,30);g.stroke();
+    // 面部轮廓
+    g.fillColor=new Color(228,181,145);g.moveTo(-8,9);g.bezierCurveTo(-9,1,-6,-7,0,-9);g.bezierCurveTo(7,-7,9,1,8,9);g.bezierCurveTo(4,14,-4,14,-8,9);g.fill();
+    // 眉眼与鼻梁
+    g.strokeColor=new Color(48,36,33);g.lineWidth=1.4;g.moveTo(-6,6);g.bezierCurveTo(-4,8,-2,8,-1,6);g.moveTo(1,6);g.bezierCurveTo(3,8,5,8,6,6);g.stroke();
+    g.fillColor=new Color(25,27,31);g.ellipse(-3.2,4.3,1.3,.8);g.ellipse(3.2,4.3,1.3,.8);g.fill();
+    g.strokeColor=new Color(150,91,65);g.lineWidth=.9;g.moveTo(0,4);g.lineTo(-1,0);g.lineTo(1,-1);g.stroke();
+    g.strokeColor=new Color(126,63,52);g.moveTo(-3,-4);g.bezierCurveTo(0,-5,2,-5,4,-3);g.stroke();
+    // 束发与发冠
+    g.fillColor=new Color(28,31,43);g.moveTo(-9,10);g.bezierCurveTo(-8,21,-3,26,0,27);g.bezierCurveTo(5,24,9,18,9,10);g.lineTo(6,7);g.bezierCurveTo(2,12,-3,12,-7,7);g.close();g.fill();
+    g.fillColor=new Color(38,43,58);g.ellipse(0,12,16,4);g.fill();
+    g.fillColor=new Color(208,168,88);g.moveTo(-4,21);g.lineTo(0,28);g.lineTo(5,21);g.lineTo(3,17);g.lineTo(-3,17);g.close();g.fill();
+    g.strokeColor=new Color(178,51,46);g.lineWidth=1.6;g.moveTo(-6,14);g.bezierCurveTo(-1,17,2,11,7,14);g.stroke();
+    // 发绳与小铜坠，移动时随头节点整体联动
+    g.strokeColor=new Color(216,174,91);g.lineWidth=1.2;g.moveTo(7,18);g.bezierCurveTo(14,23,13,29,9,33);g.stroke();
+    g.fillColor=new Color(213,167,77);g.moveTo(8,31);g.lineTo(11,35);g.lineTo(14,31);g.close();g.fill();
   }
 
   // 绘制手臂与皮手套
   private drawArm(node: Node) {
     const g=node.addComponent(Graphics);g.clear();
-    g.fillColor=new Color(44,58,88);g.roundRect(0,-4,15,8,3);g.fill();
-    g.strokeColor=new Color(113,132,164);g.lineWidth=1;g.moveTo(3,2);g.lineTo(10,-2);g.stroke();
-    g.fillColor=new Color(219,178,142);g.circle(16,0,4);g.fill();
-    g.fillColor=new Color(178,52,46);g.rect(10,-4,3,8);g.fill();
+    g.fillColor=new Color(44,58,88);g.moveTo(0,-5);g.lineTo(14,-4);g.lineTo(18,1);g.lineTo(13,5);g.lineTo(0,4);g.close();g.fill();
+    g.strokeColor=new Color(111,131,165);g.lineWidth=1;g.moveTo(3,2);g.bezierCurveTo(7,-1,10,2,14,-1);g.stroke();
+    // 护腕
+    g.fillColor=new Color(173,51,46);g.moveTo(10,-5);g.lineTo(15,-4);g.lineTo(16,4);g.lineTo(11,5);g.close();g.fill();
+    g.strokeColor=new Color(219,176,90);g.lineWidth=1;g.moveTo(11,2);g.lineTo(15,0);g.stroke();
+    // 手掌与捏符手势
+    g.fillColor=new Color(219,178,142);g.ellipse(18,0,4.5,3.8);g.fill();
+    g.strokeColor=new Color(126,76,60);g.lineWidth=.8;g.moveTo(18,1);g.lineTo(22,4);g.moveTo(18,-1);g.lineTo(22,-3);g.stroke();
   }
 
   // 绘制符灯模型（全面提升5种武器的细节结构）
   private drawGun(node: Node, gun: GunType) {
     let g=node.getComponent(Graphics);if(!g)g=node.addComponent(Graphics);g.clear();
+    // 5种符器都保留存档ID，但视觉完全采用灯、铃、符夹、法印结构
     if(gun==='revolver'){
-      g.strokeColor=new Color(184,138,75);g.lineWidth=3;g.moveTo(-2,0);g.lineTo(10,0);g.stroke();
-      g.fillColor=new Color(198,151,78);g.circle(11,0,5);g.fill();
-      g.fillColor=new Color(255,213,112,210);g.ellipse(11,0,3,4);g.fill();
-      g.strokeColor=new Color(177,51,45);g.lineWidth=1.5;g.moveTo(9,3);g.lineTo(13,-3);g.stroke();
-    } else if(gun==='lever'){
-      g.fillColor=new Color(224,207,158);g.roundRect(-3,-5,25,10,2);g.fill();
-      g.strokeColor=new Color(165,48,43);g.lineWidth=2;g.moveTo(1,2);g.bezierCurveTo(7,7,12,-5,19,2);g.stroke();
-      g.fillColor=new Color(218,176,86);g.rect(20,-3,6,6);g.fill();
-    } else if(gun==='shotgun'){
-      g.fillColor=new Color(224,207,158);g.moveTo(-2,-7);g.lineTo(24,-4);g.lineTo(24,4);g.lineTo(-2,7);g.close();g.fill();
-      g.strokeColor=new Color(181,51,46);g.lineWidth=2;g.moveTo(2,-3);g.lineTo(20,0);g.moveTo(2,3);g.lineTo(20,0);g.stroke();
-      g.fillColor=new Color(245,158,67,210);g.circle(24,0,4);g.fill();
-    } else if(gun==='bounce'){
-      g.fillColor=new Color(212,199,151);g.roundRect(-2,-5,20,10,3);g.fill();
-      g.strokeColor=new Color(76,129,123);g.lineWidth=2;g.moveTo(1,2);g.bezierCurveTo(6,7,12,-6,17,1);g.stroke();
-      g.fillColor=new Color(118,177,163);g.circle(19,0,4);g.fill();
-    } else {
-      g.fillColor=new Color(58,48,69);g.roundRect(-4,-7,28,14,4);g.fill();
-      g.strokeColor=new Color(219,177,87);g.lineWidth=2;g.roundRect(1,-5,18,10,3);g.stroke();
-      g.fillColor=new Color(178,52,47);g.moveTo(6,4);g.lineTo(12,-4);g.lineTo(18,4);g.close();g.fill();
+      g.strokeColor=new Color(122,88,61);g.lineWidth=3;g.moveTo(-3,0);g.lineTo(10,0);g.stroke();
+      g.fillColor=new Color(197,151,77);g.moveTo(8,5);g.bezierCurveTo(15,7,18,2,17,-4);g.lineTo(11,-7);g.lineTo(7,-3);g.close();g.fill();
+      g.fillColor=new Color(255,211,107,220);g.moveTo(12,4);g.bezierCurveTo(18,1,16,-4,12,-5);g.bezierCurveTo(9,-1,9,2,12,4);g.fill();
+      g.strokeColor=new Color(174,50,45);g.lineWidth=1.4;g.moveTo(9,3);g.lineTo(15,-3);g.moveTo(10,-2);g.lineTo(15,2);g.stroke();
+    }else if(gun==='lever'){
+      g.fillColor=new Color(222,207,161);g.moveTo(-3,-5);g.lineTo(23,-4);g.lineTo(27,0);g.lineTo(22,5);g.lineTo(-2,5);g.close();g.fill();
+      g.strokeColor=new Color(165,48,43);g.lineWidth=2;g.moveTo(1,2);g.bezierCurveTo(7,7,13,-5,20,2);g.stroke();
+      g.fillColor=new Color(214,171,84);g.moveTo(21,-5);g.lineTo(28,0);g.lineTo(21,5);g.close();g.fill();
+      g.strokeColor=new Color(96,121,155);g.lineWidth=1;g.moveTo(4,-3);g.lineTo(17,-2);g.stroke();
+    }else if(gun==='shotgun'){
+      g.fillColor=new Color(224,207,158);g.moveTo(-2,-8);g.lineTo(22,-5);g.lineTo(28,0);g.lineTo(22,5);g.lineTo(-2,8);g.close();g.fill();
+      g.strokeColor=new Color(181,51,46);g.lineWidth=2;g.moveTo(1,-4);g.bezierCurveTo(9,-1,15,-1,23,0);g.moveTo(1,4);g.bezierCurveTo(9,1,15,1,23,0);g.stroke();
+      g.fillColor=new Color(245,158,67,210);g.moveTo(23,5);g.bezierCurveTo(30,1,29,-3,23,-5);g.lineTo(28,0);g.close();g.fill();
+    }else if(gun==='bounce'){
+      g.fillColor=new Color(211,199,153);g.moveTo(-3,-5);g.bezierCurveTo(7,-8,16,-6,21,-1);g.bezierCurveTo(17,7,7,8,-2,5);g.close();g.fill();
+      g.strokeColor=new Color(70,139,128);g.lineWidth=2;g.moveTo(1,2);g.bezierCurveTo(6,8,13,-7,19,1);g.stroke();
+      g.strokeColor=new Color(207,171,88);g.lineWidth=1;g.circle(18,0,5);g.stroke();
+    }else{
+      g.fillColor=new Color(58,48,69);g.moveTo(-4,-7);g.lineTo(18,-8);g.lineTo(27,-2);g.lineTo(25,7);g.lineTo(1,8);g.close();g.fill();
+      g.strokeColor=new Color(219,177,87);g.lineWidth=2;g.moveTo(1,-5);g.lineTo(18,-5);g.lineTo(22,0);g.lineTo(17,5);g.lineTo(2,5);g.close();g.stroke();
+      g.fillColor=new Color(178,52,47);g.moveTo(6,4);g.lineTo(12,-4);g.lineTo(18,4);g.lineTo(12,0);g.close();g.fill();
+      g.fillColor=new Color(243,184,78,180);g.moveTo(23,4);g.bezierCurveTo(29,0,27,-5,23,-6);g.bezierCurveTo(20,-2,20,2,23,4);g.fill();
     }
   }
 
