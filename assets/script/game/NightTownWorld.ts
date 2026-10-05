@@ -169,7 +169,7 @@ export class NightTownWorld extends Component {
     }
   }
 
-  // 构建各个关卡的专属动态小道具（风滚草、摇晃油灯、百叶门、蒸汽喷雾）
+  // 构建各个关卡的专属动态小道具（漂符、摇晃灯笼、檐下风符与邪雾）
   private setupDynamicProps(level: number) {
     this.lanternNode=new Node('SwayLantern');this.lanternNode.setPosition(level%2===0?-245:245,355,0);this.dynamicRoot.addChild(this.lanternNode);
     const lg=this.lanternNode.addComponent(Graphics);
@@ -209,7 +209,7 @@ export class NightTownWorld extends Component {
     if (this.isPaused) return;
     this.worldTimer += dt;
 
-    // 1. 驱动风滚草在地面闪避蹦跳
+    // 1. 驱动漂符在低空起伏穿行
     if (this.tumbleNode && this.tumbleNode.isValid) {
       const curX = this.tumbleNode.position.x + dt * 68;
       const driftY = -80 + Math.sin(this.worldTimer * 2.4) * 18;
