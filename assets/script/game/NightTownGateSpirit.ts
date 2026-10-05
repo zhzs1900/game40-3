@@ -454,4 +454,11 @@ export class NightTownGateSpirit extends Component {
       }
     }
   }
+  onDestroy() {
+    this.unscheduleAllCallbacks();
+    this.isCharging = false;
+    this.onBossFire = undefined;
+    this.onSummonMinions = undefined;
+    this.onHandBroken = undefined;
+  }
 }
