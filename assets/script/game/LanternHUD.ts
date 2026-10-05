@@ -45,6 +45,7 @@ export class LanternHUD extends Component {
   private currentUpgradeOptions: BuffOption[] = [];
   private choosing = false;
   private clock = 0;
+  private tearingDown = false;
 
   onLoad() {
     for (let n: Node | null = this.node; n; n = n.parent) {
@@ -59,7 +60,9 @@ export class LanternHUD extends Component {
   }
 
   private canPlay(): boolean {
-    return (!this.owner || (this.owner.enabled && !this.owner.isPaused)) && !this.upgradeModalNode?.active;
+    if (this.tearingDown || !this.isValid || !this.node?.isValid) return false;
+    if (this.owner && (!this.owner.isValid || !this.owner.enabled || this.owner.isPaused)) return false;
+    return !this.upgradeModalNode?.active;
   }
 
   private createTopBar() {
@@ -162,7 +165,8 @@ export class LanternHUD extends Component {
         });
       }
       if (v.card.val !== card.val || v.card.suit !== card.suit || v.card.isJoker !== card.isJoker) {
-        Art.drawCard(v.visual.getChildByName('Paper')!, card, Layout.cardW, Layout.cardH);
+        const paper = v.visual?.isValid ? v.visual.getChildByName('Paper') : null;
+        if (paper?.isValid) Art.drawCard(paper, card, Layout.cardW, Layout.cardH);
       }
       v.card = { ...card };
       v.node.setPosition((i - (cards.length - 1) / 2) * Layout.cardPitch, 0, 0);
@@ -173,6 +177,7 @@ export class LanternHUD extends Component {
 
   private refreshSelection() {
     for (const v of this.handCards) {
+      if (!v.node?.isValid || !v.visual?.isValid || !v.glow?.isValid) continue;
       const selected = this.selectedIds.has(v.card.id);
       v.glow.opacity = selected ? 230 : 0;
       v.visual.setPosition(0, selected ? Layout.selectedLift : 0, 0);
@@ -214,7 +219,9 @@ export class LanternHUD extends Component {
   }
 
   private contains(node: Node, event: EventTouch): boolean {
-    const ui = node.getComponent(UITransform)!;
+    if (!node?.isValid) return false;
+    const ui = node.getComponent(UITransform);
+    if (!ui) return false;
     const p = event.getUILocation();
     const local = ui.convertToNodeSpaceAR(new Vec3(p.x, p.y, 0));
     return Math.abs(local.x) <= ui.width / 2 && Math.abs(local.y) <= ui.height / 2;
@@ -228,22 +235,30 @@ export class LanternHUD extends Component {
   private onJoyMove(e: EventTouch) {
     if (this.joyTouch !== e.getID()) return;
     if (!this.canPlay()) { this.stopJoystick(); return; }
+    if (!this.stickBaseNode?.isValid || !this.stickThumbNode?.isValid) {
+      this.stopJoystick(false);
+      return;
+    }
+    const ui = this.stickBaseNode.getComponent(UITransform);
+    if (!ui) { this.stopJoystick(false); return; }
     const p = e.getUILocation();
-    const local = this.stickBaseNode.getComponent(UITransform)!.convertToNodeSpaceAR(new Vec3(p.x, p.y, 0));
+    const local = ui.convertToNodeSpaceAR(new Vec3(p.x, p.y, 0));
     const length = Math.sqrt(local.x * local.x + local.y * local.y);
     const factor = length > 48 ? 48 / length : 1;
-    this.stickThumbNode.setPosition(local.x * factor, local.y * factor, 0);
+    if (this.stickThumbNode.isValid) this.stickThumbNode.setPosition(local.x * factor, local.y * factor, 0);
     this.moveDir.set(local.x * factor / 48, local.y * factor / 48, 0);
-    this.onMove?.(this.moveDir);
+    if (!this.tearingDown) this.onMove?.(this.moveDir);
   }
 
   private onJoyEnd(e: EventTouch) { if (this.joyTouch === e.getID()) this.stopJoystick(); }
-  private stopJoystick() {
+  private stopJoystick(notify: boolean = true) {
     const moving = this.joyTouch !== null;
     this.joyTouch = null;
-    this.stickThumbNode?.setPosition(0, 0, 0);
+    if (!this.tearingDown && this.stickThumbNode?.isValid) {
+      this.stickThumbNode.setPosition(0, 0, 0);
+    }
     this.moveDir.set(0, 0, 0);
-    if (moving) this.onMove?.(this.moveDir);
+    if (notify && moving && !this.tearingDown && this.isValid) this.onMove?.(this.moveDir);
   }
   public isJoystickDragging(): boolean { return this.joyTouch !== null; }
 
@@ -371,7 +386,9 @@ export class LanternHUD extends Component {
   showUpgradeChoices(options: BuffOption[]) {
     this.stopJoystick(); this.choosing = false;
     this.currentUpgradeOptions = options.slice(0, 3);
-    const table = this.upgradeModalNode.getChildByName('Table')!;
+    if (!this.upgradeModalNode?.isValid) return;
+    const table = this.upgradeModalNode.getChildByName('Table');
+    if (!table?.isValid) return;
     for (const old of [...table.children]) if (old.name.startsWith('ChoiceCard_')) { old.removeFromParent(); old.destroy(); }
     this.upgradeModalNode.active = true;
     this.currentUpgradeOptions.forEach((option, i) => {
@@ -418,7 +435,9 @@ export class LanternHUD extends Component {
     }
     this.clock += Math.min(dt, .05);
     for (let i = 0; i < this.handCards.length; i++) {
-      const v = this.handCards[i], selected = this.selectedIds.has(v.card.id);
+      const v = this.handCards[i];
+      if (!v.node?.isValid || !v.visual?.isValid || !v.glow?.isValid) continue;
+      const selected = this.selectedIds.has(v.card.id);
       const lift = selected ? Layout.selectedLift + Math.sin(this.clock * 2.6 + i) * 1.2 : 0;
       v.visual.setPosition(0, lift - (v.pressed ? 2 : 0), 0);
       const k = v.pressed ? .97 : 1;
@@ -426,11 +445,36 @@ export class LanternHUD extends Component {
       v.glow.opacity = selected ? Math.round(195 + Math.sin(this.clock * 3 + i) * 35) : 0;
     }
     this.actions.forEach((v, i) => {
+      if (!v.node?.isValid || !v.visual?.isValid || !v.glow?.isValid) return;
       const k = v.pressed ? .95 : 1; v.visual.setScale(k, k, 1);
       v.glow.opacity = Math.round((i === 2 && this.energyRatio >= 1 ? 195 : 70) + Math.sin(this.clock * 2 + i) * 25);
     });
   }
 
-  onDisable() { this.stopJoystick(); }
-  onDestroy() { this.stopJoystick(); }
+  onDisable() {
+    if (!this.tearingDown) this.stopJoystick();
+  }
+
+  onDestroy() {
+    // Cocos may already have released the Node transform before component onDestroy.
+    // Never call setPosition or gameplay callbacks from teardown.
+    this.tearingDown = true;
+    this.joyTouch = null;
+    this.moveDir.set(0, 0, 0);
+    for (const v of this.actions) v.cancel();
+    for (const v of this.handCards) v.cancel();
+    this.actions = [];
+    this.handCards = [];
+    this.currentUpgradeOptions = [];
+    this.owner = null;
+    this.onMove = undefined;
+    this.onFireCombo = undefined;
+    this.onRoll = undefined;
+    this.onTriggerKata = undefined;
+    this.onCardClick = undefined;
+    this.onAdSupplyClick = undefined;
+    this.onPauseClick = undefined;
+    this.onSelectBuff = undefined;
+    this.onSelectionChange = undefined;
+  }
 }
