@@ -317,9 +317,10 @@ export class LanternHUD extends Component {
   }
 
   redrawKataBadge(cur: number, max: number) {
+    if (this.tearingDown || !this.isValid) return;
     this.energyRatio = max > 0 && Number.isFinite(cur) ? Math.max(0, Math.min(1, cur / max)) : 0;
     const g = this.kataEnergyG;
-    if (!g) return;
+    if (!g?.isValid || !this.kataLabel?.isValid) return;
     g.clear();
     if (this.energyRatio > 0) {
       g.strokeColor = this.energyRatio >= 1 ? new Color(255, 215, 128) : new Color(140, 195, 182);
@@ -330,6 +331,7 @@ export class LanternHUD extends Component {
   }
 
   setComboHint(combo: HandCombo) {
+    if (this.tearingDown || !this.comboLabel?.isValid) return;
     const names = {
       single: '\u5355\u7b26 \u00b7 \u9a71\u90aa', pair: '\u53cc\u5370 \u00b7 \u5e76\u7b26',
       trips: '\u4e09\u5370 \u00b7 \u6563\u7b26', straight: '\u8fde\u4e66 \u00b7 \u75be\u7b26',
@@ -340,6 +342,8 @@ export class LanternHUD extends Component {
   }
 
   updateHp(curHp: number, maxHp: number, curShield: number) {
+    if (this.tearingDown || !this.hpBarG?.isValid || !this.shieldBarG?.isValid ||
+        !this.healthLabel?.isValid || !this.shieldLabel?.isValid) return;
     const ratio = maxHp > 0 ? Math.max(0, Math.min(1, curHp / maxHp)) : 0;
     const bar = (g: Graphics, amount: number, h: number, color: Color) => {
       g.clear(); g.fillColor = new Color(5, 15, 28); g.roundRect(0, -h / 2, 198, h, h / 2); g.fill();
@@ -356,12 +360,14 @@ export class LanternHUD extends Component {
   }
 
   updateCoins(coins: number) {
+    if (this.tearingDown || !this.coinLabel?.isValid) return;
     const n = Number.isFinite(coins) ? Math.max(0, Math.floor(coins)) : 0;
     this.coinLabel.string = n >= 1e16 ? n.toExponential(1) : n >= 1e12 ? `${(n / 1e12).toFixed(n >= 1e15 ? 0 : 1)}\u4e07\u4ebf` : n >= 1e8 ? `${(n / 1e8).toFixed(1)}\u4ebf` : n >= 1e4 ? `${(n / 1e4).toFixed(1)}\u4e07` : String(n);
     this.coinLabel.string = Art.wrap(this.coinLabel.string, 116, 20, 1);
   }
 
   updateStageName(name: string) {
+    if (this.tearingDown || !this.stageLabel?.isValid || !this.waveLabel?.isValid) return;
     const parts = name.split(' - ');
     this.stageLabel.string = Art.wrap(parts[0], 252, 22, 1);
     const detail = parts.slice(1).join(' ').replace('\u7a81\u53d1\u4e8b\u4ef6\uff1a', '\u591c\u88ad\uff1a');
@@ -415,7 +421,8 @@ export class LanternHUD extends Component {
   }
 
   selectUpgradeChoice(index: number) {
-    if (!this.upgradeModalNode.active || this.choosing || this.owner?.enabled === false) return;
+    if (this.tearingDown || !this.upgradeModalNode?.isValid || !this.upgradeModalNode.active ||
+        this.choosing || (this.owner && (!this.owner.isValid || this.owner.enabled === false))) return;
     const option = this.currentUpgradeOptions[index];
     if (!option) return;
     this.choosing = true;
@@ -424,12 +431,15 @@ export class LanternHUD extends Component {
     this.onSelectBuff?.(option);
   }
 
-  closeUpgrade() { this.upgradeModalNode.active = false; }
+  closeUpgrade() { if (!this.tearingDown && this.upgradeModalNode?.isValid) this.upgradeModalNode.active = false; }
 
   update(dt: number) {
     if (!this.canPlay()) {
       this.stopJoystick();
-      for (const v of this.actions) { v.cancel(); v.visual.setScale(1, 1, 1); }
+      for (const v of this.actions) {
+        v.cancel();
+        if (v.visual?.isValid) v.visual.setScale(1, 1, 1);
+      }
       for (const v of this.handCards) v.cancel();
       return;
     }
@@ -466,6 +476,7 @@ export class LanternHUD extends Component {
     this.actions = [];
     this.handCards = [];
     this.currentUpgradeOptions = [];
+    this.selectedIds.clear();
     this.owner = null;
     this.onMove = undefined;
     this.onFireCombo = undefined;
