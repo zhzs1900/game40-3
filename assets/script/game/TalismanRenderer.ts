@@ -224,6 +224,7 @@ export class TalismanRenderer {
   }
 
   static playFlyAnim(parent: Node, card: CardItem, startPos: Vec3, heroPos: Vec3, onComplete: () => void) {
+    if (!parent?.isValid) return;
     // Derive the emitter from the actual hand root instead of the old hard-coded bottom anchor.
     const row = parent.getChildByName('UIRoot')?.getChildByName('TalismanRow');
     const slot = row?.getChildByName(`Card_${card.id}`);
@@ -237,11 +238,15 @@ export class TalismanRenderer {
     const mid = new Vec3((origin.x + heroPos.x) / 2, Math.max(origin.y, heroPos.y) + 42, 0);
     tween(n).to(.17, { position: mid, angle: -17, scale: new Vec3(.85, .85, 1) })
       .to(.15, { position: heroPos.clone(), angle: 24, scale: new Vec3(.16, .16, 1) })
-      .call(() => { n.destroy(); onComplete(); }).start();
+      .call(() => {
+        if (n.isValid) n.destroy();
+        if (parent.isValid) onComplete();
+      }).start();
     tween(opacity).delay(.14).to(.18, { opacity: 0 }).start();
   }
 
   static playGlassShards(parent: Node, pos: Vec3) {
+    if (!parent?.isValid) return;
     for (let i = 0; i < 8; i++) {
       const n = this.node(parent, 'SealAsh'); n.setPosition(pos);
       const g = n.addComponent(Graphics);
@@ -251,7 +256,7 @@ export class TalismanRenderer {
       g.moveTo(-2, 2); g.bezierCurveTo(2, 4, -1, -1, 2, -2); g.stroke();
       const a = i * Math.PI / 4, d = 25 + Math.random() * 35;
       const opacity = n.addComponent(UIOpacity);
-      tween(n).by(.4, { position: new Vec3(Math.cos(a) * d, Math.sin(a) * d, 0), angle: i * 37 }).call(() => n.destroy()).start();
+      tween(n).by(.4, { position: new Vec3(Math.cos(a) * d, Math.sin(a) * d, 0), angle: i * 37 }).call(() => { if (n.isValid) n.destroy(); }).start();
       tween(opacity).to(.4, { opacity: 0 }).start();
     }
   }
