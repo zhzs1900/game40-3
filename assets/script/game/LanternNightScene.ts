@@ -69,6 +69,7 @@ export class LanternNightScene extends Component {
   private pendingShots: { data: BulletData; delay: number }[] = [];
   private pendingKataShots: { run: () => void; delay: number }[] = [];
   private residualTalismans: { node: Node; life: number; maxLife: number; radius: number }[] = [];
+  private tearingDown: boolean = false;
 
   initialize(ui: GameUI, level: number, onFinish: (result: GameResult) => void, onMenu: () => void) {
     this.level = level;
@@ -90,6 +91,7 @@ export class LanternNightScene extends Component {
   // 构建关卡节点与全套核心玩法系统
   protected renderGameplay(root: Node, level: number) {
     this.worldRoot = root;
+    this.tearingDown = false;
     this.hasFinished = false;
     this.isPaused = false;
     this.timeScale = 1.0;
@@ -753,6 +755,7 @@ export class LanternNightScene extends Component {
 
   // 浮动简短通知
   private showFloatNotice(msg: string) {
+    if (this.tearingDown || !this.uiRoot?.isValid) return;
     const tipNode = new Node('FloatTip');
     tipNode.setPosition(0, 260, 0);
     this.uiRoot.addChild(tipNode);
@@ -774,12 +777,13 @@ export class LanternNightScene extends Component {
     tween(tipNode)
       .by(0.8, { position: new Vec3(0, 45, 0) })
       .to(0.2, { scale: new Vec3(0, 0, 1) })
-      .call(() => tipNode.destroy())
+      .call(() => { if (tipNode.isValid) tipNode.destroy(); })
       .start();
   }
 
   // 屏幕轻微震颤特效
   private shakeWorld(intensity: number) {
+    if (this.tearingDown || !this.worldRoot?.isValid) return;
     tween(this.worldRoot)
       .to(0.04, { position: new Vec3((Math.random() - 0.5) * intensity, (Math.random() - 0.5) * intensity, 0) })
       .to(0.04, { position: new Vec3(0, 0, 0) })
@@ -794,7 +798,7 @@ export class LanternNightScene extends Component {
     LanternSound.inst.playWin();
     this.showFloatNotice('灵息目标全歼！大获全胜！');
     this.scheduleOnce(() => {
-      this.finishGame('victory');
+      if (!this.tearingDown && this.isValid) this.finishGame('victory');
     }, 1.2);
   }
 
@@ -1139,6 +1143,7 @@ export class LanternNightScene extends Component {
 
   // 框架生命周期接入：暂停时冻结更新
   onDisable() {
+    if (this.tearingDown) return;
     this.pausedBeforeDisable = this.isPaused;
     this.keyState = {};
     this.currentMoveDir.set(0, 0, 0);
@@ -1147,6 +1152,7 @@ export class LanternNightScene extends Component {
 
   // 框架生命周期接入：恢复时解除暂停
   onEnable() {
+    if (this.tearingDown) return;
     if (!this.hasFinished) {
       this.isPaused = this.pausedBeforeDisable;
     }
@@ -1154,18 +1160,60 @@ export class LanternNightScene extends Component {
 
   // 玩法结束时通知框架
   finishGame(result: GameResult) {
+    if (this.tearingDown) return;
     if (this.onFinish) {
       this.onFinish(result);
     }
   }
 
   onDestroy() {
-    try {
-      input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
-      input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
-      this.bulletPool?.clearAll();
-    } catch (e) {
-      // 容错防崩
+    // Level transitions destroy this component and its child nodes in the same frame.
+    // Cancel every deferred path first so old-level callbacks cannot touch released transforms.
+    this.tearingDown = true;
+    this.hasFinished = true;
+    this.isPaused = true;
+    this.adPending = false;
+    this.unscheduleAllCallbacks();
+    input.off(Input.EventType.KEY_DOWN, this.onKeyDown, this);
+    input.off(Input.EventType.KEY_UP, this.onKeyUp, this);
+
+    this.pendingShots = [];
+    this.pendingKataShots = [];
+    for (const seal of this.residualTalismans) {
+      if (seal.node?.isValid) seal.node.destroy();
     }
+    this.residualTalismans = [];
+
+    if (this.director) {
+      this.director.onWaveStart = undefined;
+      this.director.onTriggerUpgrade = undefined;
+      this.director.onStageVictory = undefined;
+      this.director.activeEnemies = [];
+      this.director.activeBoss = null;
+    }
+    if (this.sceneWorld?.isValid) this.sceneWorld.onBoxBreak = undefined;
+    if (this.kataSys?.isValid) {
+      this.kataSys.onTimeSlow = undefined;
+      this.kataSys.onExecuteKata = undefined;
+      this.kataSys.onEnergyChange = undefined;
+    }
+    if (this.bulletPool?.isValid) {
+      this.bulletPool.onHitTarget = undefined;
+      this.bulletPool.onVampireHeal = undefined;
+      this.bulletPool.onShakeScreen = undefined;
+      this.bulletPool.clearAll();
+    }
+    if (this.touchPad?.isValid) {
+      this.touchPad.onMove = undefined;
+      this.touchPad.onFireCombo = undefined;
+      this.touchPad.onRoll = undefined;
+      this.touchPad.onTriggerKata = undefined;
+      this.touchPad.onCardClick = undefined;
+      this.touchPad.onAdSupplyClick = undefined;
+      this.touchPad.onSelectBuff = undefined;
+      this.touchPad.onSelectionChange = undefined;
+    }
+    this.keyState = {};
+    this.currentMoveDir.set(0, 0, 0);
   }
 }
