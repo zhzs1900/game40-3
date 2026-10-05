@@ -297,126 +297,45 @@ export class SpiritActor extends Component {
   private drawHorse(node: Node) {
     node.removeAllChildren();
 
-    // 1. 夜兽躯干与雕花马鞍
-    this.horseBodyNode = new Node('HBody');
-    node.addChild(this.horseBodyNode);
-    const bg = this.horseBodyNode.addComponent(Graphics);
-    // 枣红褐色健壮马身（富有肌肉弧度）
-    bg.fillColor = new Color(120, 58, 26);
-    bg.ellipse(0, 0, 30, 15);
-    bg.fill();
-    // 饱满臀部肌肉暗影
-    bg.fillColor = new Color(95, 45, 20);
-    bg.circle(-14, 2, 11);
-    bg.fill();
+    this.horseBodyNode=new Node('NightBeastBody');node.addChild(this.horseBodyNode);
+    const bg=this.horseBodyNode.addComponent(Graphics);
+    bg.fillColor=new Color(48,38,61);
+    bg.moveTo(-30,4);bg.bezierCurveTo(-25,17,-5,19,14,15);bg.bezierCurveTo(27,12,34,2,26,-9);
+    bg.bezierCurveTo(14,-18,-9,-18,-26,-10);bg.close();bg.fill();
+    bg.fillColor=new Color(83,54,85,190);
+    bg.moveTo(-24,5);bg.bezierCurveTo(-11,12,7,13,22,7);bg.bezierCurveTo(12,2,-4,-2,-21,-1);bg.close();bg.fill();
+    bg.strokeColor=new Color(186,56,50);bg.lineWidth=2;
+    bg.moveTo(-18,7);bg.bezierCurveTo(-5,14,4,-3,18,6);bg.moveTo(-14,-4);bg.bezierCurveTo(-2,4,9,-9,20,-2);bg.stroke();
+    // bone-like harness and talisman tags
+    bg.strokeColor=new Color(199,168,103);bg.lineWidth=2;bg.moveTo(-4,15);bg.lineTo(5,-14);bg.moveTo(-16,12);bg.lineTo(17,-9);bg.stroke();
+    for(let x=-14;x<=14;x+=14){bg.fillColor=new Color(223,208,164);bg.moveTo(x,11);bg.lineTo(x+7,9);bg.lineTo(x+6,-1);bg.lineTo(x-1,1);bg.close();bg.fill();}
 
-    // 墨西哥条纹马毯（红白黑三道民俗条纹）
-    bg.fillColor = new Color(210, 45, 45);
-    bg.rect(-10, 5, 20, 5);
-    bg.fill();
-    bg.fillColor = new Color(245, 240, 220);
-    bg.rect(-10, 7, 20, 1.5);
-    bg.fill();
+    this.horseHeadNode=new Node('NightBeastHead');node.addChild(this.horseHeadNode);
+    const hg=this.horseHeadNode.addComponent(Graphics);
+    hg.fillColor=new Color(53,41,66);hg.moveTo(12,7);hg.bezierCurveTo(21,14,22,25,28,30);hg.lineTo(38,21);hg.lineTo(30,5);hg.close();hg.fill();
+    hg.fillColor=new Color(80,57,78);hg.moveTo(25,25);hg.lineTo(31,37);hg.lineTo(34,25);hg.close();hg.fill();
+    hg.moveTo(18,20);hg.lineTo(19,33);hg.lineTo(24,23);hg.close();hg.fill();
+    hg.fillColor=new Color(247,185,75);hg.ellipse(32,21,3.5,2);hg.fill();
+    hg.fillColor=new Color(32,22,34);hg.ellipse(39,15,2,1.3);hg.fill();
+    hg.strokeColor=new Color(126,74,145);hg.lineWidth=2;
+    hg.moveTo(15,12);hg.bezierCurveTo(8,20,11,28,17,31);hg.moveTo(13,6);hg.bezierCurveTo(4,12,8,20,14,23);hg.stroke();
 
-    // 深色雕花牛皮马鞍与银色马镫
-    bg.fillColor = new Color(55, 28, 14);
-    bg.roundRect(-8, 8, 16, 7, 2.5);
-    bg.fill();
-    bg.strokeColor = new Color(220, 225, 235);
-    bg.lineWidth = 1.2;
-    bg.moveTo(0, 8);
-    bg.lineTo(0, -6);
-    bg.stroke();
-    bg.ellipse(0, -7, 2.5, 1.5);
-    bg.stroke();
+    this.horseFrontLeg=new Node('NightBeastFrontLeg');this.horseFrontLeg.setPosition(15,-7,0);node.addChild(this.horseFrontLeg);this.drawSingleHorseLeg(this.horseFrontLeg);
+    this.horseBackLeg=new Node('NightBeastBackLeg');this.horseBackLeg.setPosition(-16,-7,0);node.addChild(this.horseBackLeg);this.drawSingleHorseLeg(this.horseBackLeg);
 
-    // 2. 夜兽头部（马颈、立体马头、黑眼珠、白高光、立耳、波浪鬃毛）
-    this.horseHeadNode = new Node('HHead');
-    node.addChild(this.horseHeadNode);
-    const hg = this.horseHeadNode.addComponent(Graphics);
-    hg.fillColor = new Color(120, 58, 26);
-    hg.moveTo(15, 6);
-    hg.lineTo(28, 23);
-    hg.lineTo(37, 19);
-    hg.lineTo(24, 0);
-    hg.close();
-    hg.fill();
-    // 立体马头
-    hg.ellipse(33, 19, 7.5, 5.2);
-    hg.fill();
-    // 黑色深邃马眼与高光白点
-    hg.fillColor = new Color(20, 15, 15);
-    hg.circle(34, 21, 1.5);
-    hg.fill();
-    hg.fillColor = new Color(255, 255, 255);
-    hg.circle(34.3, 21.3, 0.6);
-    hg.fill();
-    // 喷气黑鼻孔
-    hg.fillColor = new Color(40, 20, 15);
-    hg.ellipse(38.5, 17, 1.2, 0.8);
-    hg.fill();
-    // 竖立敏锐马耳
-    hg.fillColor = new Color(105, 50, 22);
-    hg.moveTo(27, 24);
-    hg.lineTo(30, 31);
-    hg.lineTo(32, 24);
-    hg.close();
-    hg.fill();
-    // 飘逸黑色波浪马鬃
-    hg.fillColor = new Color(28, 18, 14);
-    hg.moveTo(18, 13);
-    hg.bezierCurveTo(20, 20, 22, 26, 25, 27);
-    hg.lineTo(22, 27);
-    hg.close();
-    hg.fill();
-    hg.moveTo(14, 8);
-    hg.bezierCurveTo(16, 14, 18, 20, 21, 21);
-    hg.lineTo(18, 21);
-    hg.close();
-    hg.fill();
-
-    // 3. 独立前马腿（可向前大跨步屈膝）
-    this.horseFrontLeg = new Node('HFrontLeg');
-    this.horseFrontLeg.setPosition(14, -6, 0);
-    node.addChild(this.horseFrontLeg);
-    this.drawSingleHorseLeg(this.horseFrontLeg);
-
-    // 4. 独立后马腿（可向后蹬地）
-    this.horseBackLeg = new Node('HBackLeg');
-    this.horseBackLeg.setPosition(-16, -6, 0);
-    node.addChild(this.horseBackLeg);
-    this.drawSingleHorseLeg(this.horseBackLeg);
-
-    // 5. 独立飘摇马尾
-    this.horseTailNode = new Node('HTail');
-    this.horseTailNode.setPosition(-22, 6, 0);
-    node.addChild(this.horseTailNode);
-    const tg = this.horseTailNode.addComponent(Graphics);
-    tg.fillColor = new Color(25, 16, 12);
-    tg.moveTo(0, 0);
-    tg.bezierCurveTo(-15, -7, -22, -22, -12, -28);
-    tg.bezierCurveTo(-9, -17, -4, -6, 0, 0);
-    tg.close();
-    tg.fill();
+    this.horseTailNode=new Node('SpiritTail');this.horseTailNode.setPosition(-24,5,0);node.addChild(this.horseTailNode);
+    const tg=this.horseTailNode.addComponent(Graphics);
+    tg.fillColor=new Color(76,48,93,190);tg.moveTo(0,2);tg.bezierCurveTo(-14,6,-26,-5,-29,-17);tg.bezierCurveTo(-21,-10,-20,-26,-10,-30);tg.bezierCurveTo(-7,-18,-1,-8,0,2);tg.close();tg.fill();
+    tg.strokeColor=new Color(152,91,177,150);tg.lineWidth=1.5;tg.moveTo(-3,0);tg.bezierCurveTo(-14,-5,-18,-13,-13,-25);tg.stroke();
   }
 
   // 绘制单条马腿（大腿肌肉、小腿关节、白飞节与铁掌）
   private drawSingleHorseLeg(node: Node) {
-    const g = node.addComponent(Graphics);
-    g.fillColor = new Color(100, 48, 22);
-    g.roundRect(-3, -13, 6, 14, 2);
-    g.fill();
-    // 蹄腕白色飞节毛
-    g.fillColor = new Color(245, 240, 230);
-    g.rect(-3, -15, 6, 2.5);
-    g.fill();
-    // 黑色坚硬马蹄铁掌
-    g.fillColor = new Color(25, 25, 28);
-    g.rect(-3, -18, 6, 3);
-    g.fill();
-    g.fillColor = new Color(190, 195, 205);
-    g.rect(-3, -18.5, 6, 0.8); // 蹄铁银光反光掌面
-    g.fill();
+    const g=node.addComponent(Graphics);
+    g.fillColor=new Color(48,37,59);g.moveTo(-5,1);g.lineTo(5,1);g.lineTo(7,-12);g.lineTo(2,-18);g.lineTo(-4,-14);g.close();g.fill();
+    g.strokeColor=new Color(101,67,111);g.lineWidth=1.5;g.moveTo(-2,-2);g.lineTo(3,-13);g.stroke();
+    g.fillColor=new Color(111,82,68);g.moveTo(-4,-15);g.lineTo(5,-17);g.lineTo(9,-22);g.lineTo(1,-23);g.lineTo(-7,-19);g.close();g.fill();
+    g.strokeColor=new Color(211,172,92);g.lineWidth=1;g.moveTo(-3,-18);g.lineTo(5,-20);g.stroke();
   }
 
   // 更新头顶小血条
@@ -466,71 +385,38 @@ export class SpiritActor extends Component {
 
   // 帅气后仰倒地死亡、地面滑行沙尘带、帽子武器脱手飞出
   private playDeath() {
-    this.isDead = true;
-    this.hpBarNode.active = false;
-    this.legLeftNode.active = false;
-    this.legRightNode.active = false;
-    if (this.shadowNode) {
-      this.shadowNode.active = false; // 隐藏脚底阴影，避免倒地后原地突兀残留黑色圆圈
-    }
-
-    // 身体向后猛烈仰倒并滑行
-    tween(this.bodyRoot)
-      .to(0.25, { position: new Vec3(-14, -14, 0), angle: -85 }, { easing: 'quadIn' })
-      .start();
-
-    // 地面滑行沙尘带
-    const dustParent = this.node.parent;
-    if (dustParent) {
-      for (let i = 0; i < 4; i++) {
-        const slideDust = new Node('SlideDust');
-        slideDust.setPosition(this.node.position.x - i * 8, this.node.position.y - 14, 0);
-        dustParent.addChild(slideDust);
-        const dg = slideDust.addComponent(Graphics);
-        dg.fillColor = new Color(205, 180, 140, 160);
-        dg.circle(0, 0, 4 + i * 2);
-        dg.fill();
-        tween(slideDust)
-          .to(0.35, { scale: new Vec3(2.2, 2.2, 1) })
-          .call(() => slideDust.destroy())
-          .start();
+    this.isDead=true;this.hpBarNode.active=false;this.legLeftNode.active=false;this.legRightNode.active=false;
+    if(this.shadowNode)this.shadowNode.active=false;
+    const parent=this.node.parent;
+    // 各类邪祟死亡都产生纸灰、灵火、裂纹碎片的组合效果，而不是留下简单圆圈
+    if(parent){
+      for(let i=0;i<7;i++){
+        const shard=new Node('SpiritDeathShard');shard.setPosition(this.node.position);parent.addChild(shard);
+        const g=shard.addComponent(Graphics);
+        if(i%2===0){g.fillColor=new Color(220,204,163,190);g.moveTo(-3,-6);g.lineTo(5,-3);g.lineTo(2,6);g.lineTo(-5,3);g.close();g.fill();g.strokeColor=new Color(166,48,44);g.lineWidth=1;g.moveTo(-1,3);g.lineTo(2,-3);g.stroke();}
+        else{g.fillColor=new Color(110,70,130,155);g.moveTo(0,7);g.bezierCurveTo(6,2,4,-5,0,-8);g.bezierCurveTo(-5,-3,-4,3,0,7);g.fill();}
+        const a=(i/7)*Math.PI*2+(Math.random()-.5)*.4,dist=24+Math.random()*28;
+        tween(shard).by(.38,{position:new Vec3(Math.cos(a)*dist,Math.sin(a)*dist+18,0),angle:(Math.random()-.5)*300,scale:new Vec3(.55,.55,1)},{easing:'quadOut'}).call(()=>shard.destroy()).start();
       }
+      const residue=new Node('DissolvingInk');residue.setPosition(this.node.position.x,this.node.position.y-16,0);parent.addChild(residue);
+      const rg=residue.addComponent(Graphics);rg.strokeColor=new Color(73,54,85,120);rg.lineWidth=4;
+      rg.moveTo(-20,0);rg.bezierCurveTo(-12,9,-4,-6,4,2);rg.bezierCurveTo(10,9,15,-5,23,1);rg.stroke();
+      rg.strokeColor=new Color(151,70,84,85);rg.lineWidth=2;rg.moveTo(-13,5);rg.bezierCurveTo(-4,12,6,-8,16,4);rg.stroke();
+      tween(residue).to(.65,{scale:new Vec3(1.6,.55,1)}).call(()=>residue.destroy()).start();
     }
-
-    // 武器脱手旋转飞掷
-    const flyWpn = new Node('FlyWeapon');
-    this.node.parent?.addChild(flyWpn);
-    flyWpn.setPosition(this.node.position.x + 10, this.node.position.y + 10, 0);
-    const wg = flyWpn.addComponent(Graphics);
-    wg.fillColor = new Color(120, 120, 130);
-    wg.roundRect(-6, -2, 12, 4, 1);
-    wg.fill();
-
-    tween(flyWpn)
-      .by(0.35, { position: new Vec3(35, 30, 0), angle: 480 }, { easing: 'quadOut' })
-      .by(0.25, { position: new Vec3(15, -45, 0), angle: 180 }, { easing: 'quadIn' })
-      .call(() => flyWpn.destroy())
-      .start();
-
-    // 敌人帽子飞起
-    const flyHat = new Node('FlyHat');
-    this.node.parent?.addChild(flyHat);
-    flyHat.setPosition(this.node.position.x, this.node.position.y + 20, 0);
-    const hg = flyHat.addComponent(Graphics);
-    hg.fillColor = new Color(60, 45, 35);
-    hg.ellipse(0, 0, 16, 4);
-    hg.fill();
-
-    tween(flyHat)
-      .by(0.4, { position: new Vec3(-25, 45, 0), angle: -360 }, { easing: 'quadOut' })
-      .by(0.25, { position: new Vec3(-10, -55, 0), angle: -180 }, { easing: 'quadIn' })
-      .call(() => flyHat.destroy())
-      .start();
-
-    // 0.8秒后完全淡化移除
-    this.scheduleOnce(() => {
-      this.node.destroy();
-    }, 0.8);
+    if(this.kind==='rider'&&this.horseNode){
+      tween(this.horseNode).to(.2,{angle:-18,position:new Vec3(-8,-10,0)}).to(.3,{angle:-45,position:new Vec3(-20,-22,0)}).start();
+      tween(this.bodyRoot).to(.18,{position:new Vec3(8,28,0),angle:26}).to(.35,{position:new Vec3(28,-18,0),angle:95}).start();
+    }else if(this.kind==='gunner'){
+      tween(this.bodyRoot).to(.22,{position:new Vec3(0,8,0),scale:new Vec3(.9,1.12,1)}).to(.35,{position:new Vec3(-9,-22,0),angle:-68,scale:new Vec3(1,1,1)}).start();
+    }else if(this.kind==='shotgunner'){
+      tween(this.bodyRoot).to(.18,{scale:new Vec3(1.2,.82,1),position:new Vec3(0,-6,0)}).to(.4,{scale:new Vec3(.75,1.2,1),position:new Vec3(0,-26,0),angle:20}).start();
+    }else if(this.kind==='bomber'){
+      tween(this.bodyRoot).to(.12,{scale:new Vec3(.8,1.25,1),angle:-12}).to(.16,{scale:new Vec3(1.22,.72,1),angle:18}).to(.3,{position:new Vec3(12,-24,0),angle:75,scale:new Vec3(1,1,1)}).start();
+    }else{
+      tween(this.bodyRoot).to(.16,{position:new Vec3(6,3,0),angle:16}).to(.34,{position:new Vec3(-14,-20,0),angle:-82}).start();
+    }
+    this.scheduleOnce(()=>{if(this.node.isValid)this.node.destroy();},.85);
   }
 
   // 敌人每帧AI行为驱动
@@ -612,13 +498,24 @@ export class SpiritActor extends Component {
         this.spawnStepDust(myPos);
       }
     } else {
-      // 站定进入射程
+      // 站定后也保持各兵种独有的呼吸/漂浮/折纸/兽骑待机，不允许静止贴图
       if (this.kind !== 'rider') {
-        this.legLeftNode.angle = 0;
-        this.legRightNode.angle = 0;
-        this.bodyRoot.setScale(1, 1, 1);
-        this.bodyRoot.angle = 0;
-        this.bodyRoot.setPosition(0, 0, 0);
+        if(this.kind==='brawler'){
+          this.legLeftNode.angle=Math.sin(this.animTimer*.7)*5;this.legRightNode.angle=-this.legLeftNode.angle;
+          this.bodyRoot.setScale(1+Math.sin(this.animTimer)*.025,1-Math.sin(this.animTimer)*.025,1);
+          this.headNode.angle=Math.sin(this.animTimer*.55)*3;
+        }else if(this.kind==='gunner'){
+          this.bodyRoot.setPosition(0,Math.sin(this.animTimer*.75)*4,0);
+          this.armNode.angle += Math.sin(this.animTimer*.65)*2;
+          this.headNode.angle=Math.sin(this.animTimer*.5)*5;
+        }else if(this.kind==='shotgunner'){
+          this.bodyRoot.setScale(1+Math.sin(this.animTimer*.8)*.04,1-Math.sin(this.animTimer*.8)*.04,1);
+          this.headNode.angle=Math.sin(this.animTimer*.5)*7;
+        }else{
+          this.bodyRoot.angle=Math.sin(this.animTimer*.8)*5;
+          this.legLeftNode.angle=Math.sin(this.animTimer)*8;this.legRightNode.angle=-this.legLeftNode.angle;
+          this.weaponNode.angle=Math.sin(this.animTimer*1.4)*7;
+        }
       } else {
         if (this.horseFrontLeg && this.horseBackLeg && this.horseNode) {
           this.horseFrontLeg.angle = 0;
@@ -639,34 +536,44 @@ export class SpiritActor extends Component {
 
   // 敌人脚底喷出奔跑小沙尘团
   private spawnStepDust(pos: Vec3) {
-    const parent = this.node.parent;
-    if (!parent) return;
-
-    const dust = new Node('EnemyDust');
-    dust.setPosition(pos.x + (Math.random() - 0.5) * 8, pos.y - 18, 0);
-    parent.addChild(dust);
-
-    const g = dust.addComponent(Graphics);
-    g.fillColor = new Color(104, 129, 157, 95);
-    g.circle(0, 0, 3.5);
-    g.fill();
-
-    tween(dust)
-      .to(0.22, { scale: new Vec3(1.8, 1.8, 1) })
-      .call(() => dust.destroy())
-      .start();
+    const parent=this.node.parent;if(!parent)return;
+    for(let i=0;i<2;i++){
+      const n=new Node('SpiritStepTrace');n.setPosition(pos.x+(Math.random()-.5)*10,pos.y-18,0);parent.addChild(n);
+      const g=n.addComponent(Graphics);
+      if(this.kind==='brawler'){
+        g.strokeColor=new Color(126,95,84,130);g.lineWidth=2;g.moveTo(-7,-2);g.lineTo(-2,5);g.lineTo(2,-1);g.lineTo(7,5);g.stroke();
+      }else if(this.kind==='gunner'){
+        g.strokeColor=new Color(105,151,174,110);g.lineWidth=2;g.moveTo(-8,0);g.bezierCurveTo(-2,6,3,-6,9,1);g.stroke();
+      }else if(this.kind==='shotgunner'){
+        g.strokeColor=new Color(219,203,160,120);g.lineWidth=1.5;g.moveTo(-6,2);g.lineTo(0,7);g.lineTo(6,1);g.moveTo(-4,-3);g.lineTo(4,-4);g.stroke();
+      }else if(this.kind==='bomber'){
+        g.strokeColor=new Color(188,62,53,130);g.lineWidth=2;g.moveTo(-6,-3);g.lineTo(0,6);g.lineTo(6,-4);g.stroke();
+      }else{
+        g.strokeColor=new Color(132,89,153,130);g.lineWidth=2;g.moveTo(-9,0);g.bezierCurveTo(-2,7,4,-7,10,0);g.stroke();
+      }
+      tween(n).to(.28,{position:new Vec3(n.position.x+(Math.random()-.5)*10,n.position.y+8,0),scale:new Vec3(1.55,1.25,1),angle:(Math.random()-.5)*20})
+        .call(()=>n.destroy()).start();
+    }
   }
 
   // 执行驱邪动作
   private fireAtHero(targetPos: Vec3) {
-    // 举枪后坐力
-    tween(this.weaponNode)
-      .to(0.05, { position: new Vec3(8, 2, 0) })
-      .to(0.12, { position: new Vec3(15, 0, 0) })
-      .start();
-
-    if (this.onEnemyFire) {
-      this.onEnemyFire(this.node.position, targetPos, this.atkDmg);
+    if(this.kind==='brawler'){
+      tween(this.bodyRoot).to(.08,{angle:18,scale:new Vec3(.92,1.08,1)}).to(.10,{angle:-10,scale:new Vec3(1.08,.94,1)}).to(.10,{angle:0,scale:new Vec3(1,1,1)}).start();
+      tween(this.weaponNode).to(.08,{angle:-35,position:new Vec3(8,8,0)}).to(.1,{angle:28,position:new Vec3(20,-2,0)}).to(.1,{angle:0,position:new Vec3(15,0,0)}).start();
+    }else if(this.kind==='gunner'){
+      tween(this.bodyRoot).to(.12,{position:new Vec3(0,5,0),scale:new Vec3(.98,1.06,1)}).to(.16,{position:new Vec3(0,0,0),scale:new Vec3(1,1,1)}).start();
+      tween(this.weaponNode).to(.08,{angle:-12,position:new Vec3(11,4,0)}).to(.08,{angle:8,position:new Vec3(17,-2,0)}).to(.1,{angle:0,position:new Vec3(15,0,0)}).start();
+    }else if(this.kind==='shotgunner'){
+      tween(this.bodyRoot).to(.12,{angle:-8,scale:new Vec3(1.08,.9,1)}).to(.18,{angle:0,scale:new Vec3(1,1,1)}).start();
+      tween(this.weaponNode).to(.08,{angle:22,scale:new Vec3(1.12,.9,1)}).to(.16,{angle:0,scale:new Vec3(1,1,1)}).start();
+    }else if(this.kind==='bomber'){
+      tween(this.bodyRoot).to(.12,{angle:-16,position:new Vec3(0,-5,0)}).to(.12,{angle:15,position:new Vec3(0,5,0)}).to(.12,{angle:0,position:new Vec3(0,0,0)}).start();
+      tween(this.weaponNode).to(.1,{position:new Vec3(3,13,0),angle:-35}).to(.1,{position:new Vec3(22,5,0),angle:20}).to(.1,{position:new Vec3(15,0,0),angle:0}).start();
+    }else{
+      if(this.horseNode)tween(this.horseNode).to(.1,{scale:new Vec3(1.08,.9,1),angle:-5}).to(.13,{scale:new Vec3(.96,1.06,1),angle:3}).to(.12,{scale:new Vec3(1,1,1),angle:0}).start();
+      tween(this.weaponNode).to(.07,{angle:-15}).to(.08,{angle:12}).to(.1,{angle:0}).start();
     }
+    if(this.onEnemyFire)this.onEnemyFire(this.node.position,targetPos,this.atkDmg);
   }
 }
