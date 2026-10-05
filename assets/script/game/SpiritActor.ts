@@ -576,4 +576,16 @@ export class SpiritActor extends Component {
     }
     if(this.onEnemyFire)this.onEnemyFire(this.node.position,targetPos,this.atkDmg);
   }
+  onDestroy() {
+    this.unscheduleAllCallbacks();
+    this.onEnemyFire = undefined;
+    this.residualSlowTimer = 0;
+    this.residualSlowFactor = 1;
+    this.horseNode = undefined;
+    this.horseBodyNode = undefined;
+    this.horseFrontLeg = undefined;
+    this.horseBackLeg = undefined;
+    this.horseHeadNode = undefined;
+    this.horseTailNode = undefined;
+  }
 }
