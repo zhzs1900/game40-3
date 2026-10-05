@@ -58,7 +58,7 @@ export class LanternArray extends Component {
 
   // 激活触发巡夜灯阵
   triggerKata(heroPos: Vec3, enemyPositions: Vec3[]) {
-    if (this.isActive) return;
+    if (this.isActive || !this.isValid || !this.node?.isValid || !this.darkMaskNode?.isValid) return;
     this.isActive = true;
     this.energy = 0;
     if (this.onEnergyChange) {
@@ -98,7 +98,8 @@ export class LanternArray extends Component {
 
   // 生成环绕巡夜师旋转的发光卡牌光环
   private spawnCardOrbit(heroPos: Vec3) {
-    for (const child of [...this.cardRingNode.children]) child.destroy();
+    if (!this.cardRingNode?.isValid) return;
+    for (const child of [...this.cardRingNode.children]) if (child.isValid) child.destroy();
     this.cardRingNode.removeAllChildren();
     this.cardRingNode.setPosition(heroPos);
 
@@ -122,6 +123,7 @@ export class LanternArray extends Component {
   // 在敌人头顶生成红色悬赏十字准星
   private spawnCrosshairMark(targetPos: Vec3, delay: number) {
     this.scheduleOnce(() => {
+      if (!this.isValid || !this.node?.isValid || !this.isActive || !this.markRootNode?.isValid) return;
       const mark = new Node('Crosshair');
       mark.setPosition(targetPos);
       this.markRootNode.addChild(mark);
@@ -149,12 +151,17 @@ export class LanternArray extends Component {
 
   // 结束飞符时间，执行瞬间极速连击拔枪
   private endKataAndShoot(targets: Vec3[]) {
-    this.darkMaskNode.active = false;
-    for (const child of [...this.cardRingNode.children]) child.destroy();
-    for (const child of [...this.markRootNode.children]) child.destroy();
-    this.cardRingNode.removeAllChildren();
-    this.markRootNode.removeAllChildren();
+    if (!this.isActive) return;
     this.isActive = false;
+    if (this.darkMaskNode?.isValid) this.darkMaskNode.active = false;
+    if (this.cardRingNode?.isValid) {
+      for (const child of [...this.cardRingNode.children]) if (child.isValid) child.destroy();
+      this.cardRingNode.removeAllChildren();
+    }
+    if (this.markRootNode?.isValid) {
+      for (const child of [...this.markRootNode.children]) if (child.isValid) child.destroy();
+      this.markRootNode.removeAllChildren();
+    }
 
     // 恢复正常时间流速
     if (this.onTimeSlow) {
@@ -165,5 +172,15 @@ export class LanternArray extends Component {
     if (this.onExecuteKata && targets.length > 0) {
       this.onExecuteKata(targets);
     }
+  }
+
+  onDestroy() {
+    this.unscheduleAllCallbacks();
+    this.isActive = false;
+    this.targets = [];
+    this.remainingTime = 0;
+    this.onTimeSlow = undefined;
+    this.onExecuteKata = undefined;
+    this.onEnergyChange = undefined;
   }
 }
