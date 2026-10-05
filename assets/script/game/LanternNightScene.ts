@@ -68,6 +68,7 @@ export class LanternNightScene extends Component {
   private adPending: boolean = false;
   private pendingShots: { data: BulletData; delay: number }[] = [];
   private pendingKataShots: { run: () => void; delay: number }[] = [];
+  private residualTalismans: { node: Node; life: number; maxLife: number; radius: number }[] = [];
 
   initialize(ui: GameUI, level: number, onFinish: (result: GameResult) => void, onMenu: () => void) {
     this.level = level;
@@ -238,7 +239,7 @@ export class LanternNightScene extends Component {
         this.deck.fillHand(this.handLimit);
         this.refreshHandUI();
         this.kataSys.addEnergy(40);
-        this.showFloatNotice('获得万能王牌Joker！');
+        this.showFloatNotice('获得万能镇煞符！');
       }).catch(() => {
         if (this.isValid) this.showFloatNotice('广告暂不可用，请稍后重试');
       }).then(() => {
@@ -354,6 +355,7 @@ export class LanternNightScene extends Component {
     if (this.isPaused || this.rollCoolTimer > 0 || this.hero.curAction === 'dead' || this.hero.curAction === 'roll') return;
     this.rollCoolTimer = this.rollCooldown;
     const rollDir = this.currentMoveDir.length() > 0.1 ? this.currentMoveDir.clone().normalize() : this.currentAimDir.clone();
+    this.spawnResidualTalisman(this.hero.node.position.clone());
     this.hero.startRoll(rollDir);
     LanternSound.inst.playRoll();
 
@@ -362,6 +364,41 @@ export class LanternNightScene extends Component {
 
     // 闪避闪避加灯阵值
     this.kataSys.addEnergy(3);
+  }
+
+  // 闪避留下短暂残符：复用现有帧循环和距离检测，不建立新物理系统
+  private spawnResidualTalisman(pos: Vec3) {
+    const node = new Node('ResidualTalisman');
+    node.setPosition(pos);
+    this.entityRoot.addChild(node);
+    const g = node.addComponent(Graphics);
+    g.fillColor = new Color(231, 214, 169, 205);
+    g.moveTo(-17, -24); g.lineTo(15, -22); g.lineTo(18, 23); g.lineTo(-14, 26); g.close(); g.fill();
+    g.strokeColor = new Color(176, 49, 44, 235); g.lineWidth = 2;
+    g.moveTo(-8, 15); g.bezierCurveTo(8, 10, -8, 0, 8, -5);
+    g.moveTo(-7, -11); g.lineTo(8, -16); g.stroke();
+    g.strokeColor = new Color(228, 190, 101, 155); g.lineWidth = 1.5; g.circle(0, 0, 34); g.stroke();
+    node.setScale(0.72, 0.72, 1);
+    tween(node).to(0.16, { scale: new Vec3(1.08, 1.08, 1) }).to(0.45, { scale: new Vec3(0.9, 0.9, 1) }).start();
+    this.residualTalismans.push({ node, life: 0.78, maxLife: 0.78, radius: 72 });
+  }
+
+  private updateResidualTalismans(dt: number) {
+    for (let i = this.residualTalismans.length - 1; i >= 0; i--) {
+      const seal = this.residualTalismans[i];
+      if (!seal.node.isValid) { this.residualTalismans.splice(i, 1); continue; }
+      seal.life -= dt;
+      const pos = seal.node.position;
+      for (const enemy of this.director.activeEnemies) {
+        if (enemy?.isValid && !enemy.isDead && Vec3.distance(pos, enemy.node.position) <= seal.radius) {
+          enemy.applyResidualSlow(0.28, 0.55);
+        }
+      }
+      if (seal.life <= 0) {
+        seal.node.destroy();
+        this.residualTalismans.splice(i, 1);
+      }
+    }
   }
 
   // 刷新符箓栏UI展示与出牌大按钮提示文本
@@ -787,7 +824,7 @@ export class LanternNightScene extends Component {
       titleNode.setPosition(0, 65, 0);
       popRevive.addChild(titleNode);
       const tl = titleNode.addComponent(Label);
-      tl.string = '巡夜师濒死！是否突围？';
+      tl.string = '灯火将熄，是否续灯？';
       tl.fontSize = 20;
       tl.color = new Color(255, 230, 150);
 
@@ -808,7 +845,7 @@ export class LanternNightScene extends Component {
       const okTxt = new Node('Txt');
       okBtn.addChild(okTxt);
       const okl = okTxt.addComponent(Label);
-      okl.string = '观看广告复活 (AD)';
+      okl.string = '观看广告续灯 (AD)';
       okl.fontSize = 17;
       okl.color = new Color(255, 245, 210);
 
@@ -829,7 +866,7 @@ export class LanternNightScene extends Component {
           // 在主角脚下爆开强力击退冲击波，重伤近身敌人
           this.bulletPool.playExplosion(this.hero.node.position, 160);
           this.damageEnemiesInRadius(this.hero.node.position, 160, 90);
-          this.showFloatNotice('绝处逢生！恢复70%生命！');
+          this.showFloatNotice('灯火重燃！恢复70%生命！');
         }).catch(() => false).then(granted => {
           if (!this.isValid || this.hasFinished) return;
           this.adPending = false;
@@ -843,7 +880,7 @@ export class LanternNightScene extends Component {
       cancelBtn.setPosition(0, -75, 0);
       popRevive.addChild(cancelBtn);
       const cl = cancelBtn.addComponent(Label);
-      cl.string = '放弃抵抗';
+      cl.string = '灯灭归寂';
       cl.fontSize = 16;
       cl.color = new Color(170, 160, 155);
 
@@ -867,6 +904,7 @@ export class LanternNightScene extends Component {
 
     const dt = rawDt * this.timeScale;
     this.kataSys.updateKata(rawDt);
+    this.updateResidualTalismans(dt);
     for (let i = this.pendingKataShots.length - 1; i >= 0; i--) {
       const shot = this.pendingKataShots[i];
       shot.delay -= rawDt;
