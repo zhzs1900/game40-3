@@ -1,12 +1,12 @@
-// 扑克牌弹匣系统
-// 负责发牌、洗牌、手牌组合检测与保底机制
+// 符箓弹匣系统
+// 负责起符、理符、符箓栏组合检测与保底机制
 
-import { CardItem, ComboType, HandCombo, SuitType } from './GameData';
+import { CardItem, ComboType, HandCombo, SuitType } from './NightTownData';
 
-export class CardDeck {
+export class TalismanDeck {
   private stock: CardItem[] = [];      // 摸牌堆
   private discard: CardItem[] = [];    // 弃牌堆
-  private hand: CardItem[] = [];       // 当前手牌
+  private hand: CardItem[] = [];       // 当前符箓栏
   private nextId = 1;
   private badLuckCount = 0;            // 连续单牌计数，用来触发抽牌保底
 
@@ -14,7 +14,7 @@ export class CardDeck {
     this.resetDeck();
   }
 
-  // 重置并洗一副新扑克牌
+  // 重置并洗一副新符箓
   resetDeck() {
     this.stock = [];
     this.discard = [];
@@ -35,7 +35,7 @@ export class CardDeck {
     this.shuffle(this.stock);
   }
 
-  // 经典的洗牌洗一下
+  // 经典的理符洗一下
   private shuffle(list: CardItem[]) {
     for (let i = list.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -45,7 +45,7 @@ export class CardDeck {
     }
   }
 
-  // 获得当前手牌列表
+  // 获得当前符箓栏列表
   getHand(): CardItem[] {
     return this.hand;
   }
@@ -55,7 +55,7 @@ export class CardDeck {
     return this.stock.length;
   }
 
-  // 给手牌塞入一张特殊的万能Joker牌（广告奖励或特殊事件）
+  // 给符箓栏塞入一张特殊的万能Joker牌（广告奖励或特殊事件）
   insertJoker() {
     const joker: CardItem = {
       id: this.nextId++,
@@ -66,7 +66,7 @@ export class CardDeck {
     this.hand.push(joker);
   }
 
-  // 补满手牌，最大容量通常为5
+  // 补满符箓栏，最大容量通常为5
   fillHand(maxCount: number = 5): CardItem[] {
     const need = maxCount - this.hand.length;
     if (need <= 0) return [];
@@ -157,7 +157,7 @@ export class CardDeck {
     return added[0] || null;
   }
 
-  // 分析一组选定手牌（或全部手牌），找出最强牌型
+  // 分析一组选定符箓栏（或全部符箓栏），找出最强牌型
   evaluateCombo(cards: CardItem[]): HandCombo {
     if (!cards || cards.length === 0) return this.evaluateExactCombo([]);
     let best = this.evaluateExactCombo([cards[0]]);
@@ -179,7 +179,7 @@ export class CardDeck {
         cards: [],
         power: 1,
         mainSuit: 'spade',
-        name: '普通射击'
+        name: '普通驱邪'
       };
     }
 
@@ -190,7 +190,7 @@ export class CardDeck {
         cards: [...cards],
         power: 1.0,
         mainSuit: cards[0].suit,
-        name: `${this.getSuitName(cards[0].suit)}单枪`
+        name: `${this.getSuitName(cards[0].suit)}单符`
       };
     }
 
@@ -225,7 +225,7 @@ export class CardDeck {
         cards: [...cards],
         power: 4.5,
         mainSuit: maxSuit,
-        name: `${this.getSuitName(maxSuit)}四条·枪斗`
+        name: `${this.getSuitName(maxSuit)}四印·镇邪`
       };
     }
 
@@ -236,7 +236,7 @@ export class CardDeck {
         cards: [...cards],
         power: 3.5,
         mainSuit: maxSuit,
-        name: `${this.getSuitName(maxSuit)}葫芦·重爆`
+        name: `${this.getSuitName(maxSuit)}合契·镇煞`
       };
     }
 
@@ -247,7 +247,7 @@ export class CardDeck {
         cards: [...cards],
         power: 3.0,
         mainSuit: maxSuit,
-        name: `${this.getSuitName(maxSuit)}同花·怒放`
+        name: `${this.getSuitName(maxSuit)}同印·符阵`
       };
     }
 
@@ -258,7 +258,7 @@ export class CardDeck {
         cards: [...cards],
         power: 2.8,
         mainSuit: maxSuit,
-        name: `${this.getSuitName(maxSuit)}顺子·疾射`
+        name: `${this.getSuitName(maxSuit)}连书·疾符`
       };
     }
 
@@ -269,7 +269,7 @@ export class CardDeck {
         cards: [...cards],
         power: 2.2,
         mainSuit: maxSuit,
-        name: `${this.getSuitName(maxSuit)}三条·散射`
+        name: `${this.getSuitName(maxSuit)}三印·散符`
       };
     }
 
@@ -280,7 +280,7 @@ export class CardDeck {
         cards: [...cards],
         power: 1.6,
         mainSuit: maxSuit,
-        name: `${this.getSuitName(maxSuit)}对子·双发`
+        name: `${this.getSuitName(maxSuit)}双印·并符`
       };
     }
 
@@ -290,7 +290,7 @@ export class CardDeck {
       cards: [cards[0]],
       power: 1.0,
       mainSuit: cards[0].suit,
-      name: `${this.getSuitName(cards[0].suit)}普射`
+      name: `${this.getSuitName(cards[0].suit)}单符`
     };
   }
 
@@ -306,17 +306,17 @@ export class CardDeck {
     return false;
   }
 
-  // 自动从当前全部手牌中挑选出最高牌型的卡牌组合
+  // 自动从当前全部符箓栏中挑选出最高牌型的卡牌组合
   pickBestCombo(): HandCombo {
     return this.evaluateCombo(this.hand);
   }
 
   private getSuitName(suit: SuitType): string {
     switch (suit) {
-      case 'spade': return '黑桃';
-      case 'heart': return '红桃';
-      case 'club': return '梅花';
-      case 'diamond': return '方块';
+      case 'spade': return '雷印';
+      case 'heart': return '火印';
+      case 'club': return '风印';
+      case 'diamond': return '灵印';
     }
   }
 }

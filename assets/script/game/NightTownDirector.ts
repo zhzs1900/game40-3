@@ -2,9 +2,9 @@
 // 严密负责8大关卡波次生成、随机突发事件、精英降临、Boss登场与防卡死心跳检测
 
 import { Node, Vec3 } from 'cc';
-import { AreaInfo, BuffPool, StageList } from './GameData';
-import { EnemyActor, EnemyKind } from './EnemyActor';
-import { BossCardKing } from './BossCardKing';
+import { AreaInfo, BuffPool, StageList } from './NightTownData';
+import { SpiritActor, EnemyKind } from './SpiritActor';
+import { NightTownGateSpirit } from './NightTownGateSpirit';
 
 export interface WaveTarget {
   waveIdx: number;
@@ -14,7 +14,7 @@ export interface WaveTarget {
   eventTitle?: string;
 }
 
-export class StageDirector {
+export class NightTownDirector {
   public curLevel: number = 1;
   public stageInfo!: AreaInfo;
   public curWave: number = 1;
@@ -26,8 +26,8 @@ export class StageDirector {
   public isCleared: boolean = false;
 
   // 活跃实体引用
-  public activeEnemies: EnemyActor[] = [];
-  public activeBoss: BossCardKing | null = null;
+  public activeEnemies: SpiritActor[] = [];
+  public activeBoss: NightTownGateSpirit | null = null;
 
   // 关卡推进与事件通知
   public onWaveStart?: (wave: number, title: string) => void;
@@ -100,8 +100,8 @@ export class StageDirector {
     dt: number,
     enemyRoot: Node,
     heroPos: Vec3,
-    onEnemySpawn: (e: EnemyActor) => void,
-    onBossSpawn: (b: BossCardKing) => void
+    onEnemySpawn: (e: SpiritActor) => void,
+    onBossSpawn: (b: NightTownGateSpirit) => void
   ) {
     if (this.isCleared) return;
 
@@ -118,7 +118,7 @@ export class StageDirector {
       eNode.setPosition(ePos);
       enemyRoot.addChild(eNode);
 
-      const enemy = eNode.addComponent(EnemyActor);
+      const enemy = eNode.addComponent(SpiritActor);
       enemy.init(kind, isElite, this.curLevel);
 
       this.activeEnemies.push(enemy);
@@ -132,7 +132,7 @@ export class StageDirector {
       bNode.setPosition(0, 220, 0); // 在上方霸气出场
       enemyRoot.addChild(bNode);
 
-      const boss = bNode.addComponent(BossCardKing);
+      const boss = bNode.addComponent(NightTownGateSpirit);
       boss.initBoss(this.stageInfo.bossName, this.stageInfo.bossHp, this.curLevel);
       this.activeBoss = boss;
       onBossSpawn(boss);
@@ -147,7 +147,7 @@ export class StageDirector {
   }
 
   // 敌人被消灭时的统计
-  recordKill(enemy: EnemyActor) {
+  recordKill(enemy: SpiritActor) {
     const idx = this.activeEnemies.indexOf(enemy);
     if (idx < 0 || this.isCleared) return;
     if (idx >= 0) {
@@ -216,18 +216,18 @@ export class StageDirector {
   }
 
   // 严格自检与防卡死兜底逻辑
-  private checkAndResolveDeadlock(enemyRoot: Node, heroPos: Vec3, onEnemySpawn: (e: EnemyActor) => void) {
+  private checkAndResolveDeadlock(enemyRoot: Node, heroPos: Vec3, onEnemySpawn: (e: SpiritActor) => void) {
     // 清理已经被销毁但指针残留的空节点
     this.activeEnemies = this.activeEnemies.filter(e => e && e.isValid && e.node && e.node.isValid && !e.isDead);
 
     // 情况A：非Boss波，还有未满足的击杀指标，但屏幕上怪已死光且待生成队列空了（生成失败兜底）
     if (!this.isBossActive && this.killsInWave < this.killsNeeded && this.activeEnemies.length === 0 && this.pendingSpawns.length === 0) {
-      // 紧急补刷一名替补暴徒，确保任务能够达成
+      // 紧急补刷一名替补邪祟，确保任务能够达成
       const eNode = new Node(`EnemyBackup_${Date.now()}`);
       eNode.setPosition(this.calcSafeSpawnPos(heroPos));
       enemyRoot.addChild(eNode);
 
-      const enemy = eNode.addComponent(EnemyActor);
+      const enemy = eNode.addComponent(SpiritActor);
       enemy.init('gunner', false, this.curLevel);
       this.activeEnemies.push(enemy);
       onEnemySpawn(enemy);

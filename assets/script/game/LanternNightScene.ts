@@ -1,5 +1,5 @@
 // 游戏核心业务总入口
-// 组装并驱动主角、弹匣卡牌、枪械、敌人波次、枪斗时刻与框架对接
+// 组装并驱动主角、弹匣卡牌、符器、敌人波次、巡夜灯阵与框架对接
 
 import { _decorator, Color, Component, EventKeyboard, Graphics, Input, input, KeyCode, Label, Node, tween, UITransform, Vec3 } from 'cc';
 import { GameUI } from '../framework/ui/GameUI';
@@ -7,42 +7,42 @@ import { rewardedAdGameService } from '../common/services/RewardedAdGameService'
 import type { GameResult } from '../common/services/GameProgress';
 import { baseGameConfig } from '../config/baseGameConfig';
 
-import { BuffOption, BuffPool, CardItem, ComboType, HandCombo, ProfileMgr, SoundMgr, StageList, SuitType } from './GameData';
-import { CardDeck } from './CardDeck';
-import { HeroActor } from './HeroActor';
-import { EnemyActor } from './EnemyActor';
-import { BossCardKing } from './BossCardKing';
-import { BulletData, BulletPool } from './BulletPool';
-import { SceneWorld } from './SceneWorld';
-import { GunSystem } from './GunSystem';
-import { GunKataTime } from './GunKataTime';
-import { TouchPad } from './TouchPad';
-import { StageDirector } from './StageDirector';
-import { CardRenderer } from './CardRenderer';
+import { BuffOption, BuffPool, CardItem, ComboType, HandCombo, ProfileMgr, LanternSound, StageList, SuitType } from './NightTownData';
+import { TalismanDeck } from './TalismanDeck';
+import { LanternWarden } from './LanternWarden';
+import { SpiritActor } from './SpiritActor';
+import { NightTownGateSpirit } from './NightTownGateSpirit';
+import { BulletData, TalismanProjectilePool } from './TalismanProjectilePool';
+import { NightTownWorld } from './NightTownWorld';
+import { TalismanSystem } from './TalismanSystem';
+import { LanternArray } from './LanternArray';
+import { LanternHUD } from './LanternHUD';
+import { NightTownDirector } from './NightTownDirector';
+import { TalismanRenderer } from './TalismanRenderer';
 
-// 运行时确保封面只显示《纸牌赏金枪》，不修改config文件结构
-(baseGameConfig as any).gameTitle = '纸牌赏金枪';
+// 运行时确保封面只显示《符灯夜行》，不修改config文件结构
+
 
 const { ccclass } = _decorator;
 
-@ccclass('GameScene')
-export class GameScene extends Component {
+@ccclass('LanternNightScene')
+export class LanternNightScene extends Component {
   public level: number = 1;
   private onFinish!: (result: GameResult) => void;
   private onMenuCallback!: () => void;
 
   // 核心子系统
-  private deck: CardDeck = new CardDeck();
-  private gunSys: GunSystem = new GunSystem('revolver');
-  private director!: StageDirector;
+  private deck: TalismanDeck = new TalismanDeck();
+  private gunSys: TalismanSystem = new TalismanSystem('revolver');
+  private director!: NightTownDirector;
 
   // 节点与组件
   private worldRoot!: Node;
-  private hero!: HeroActor;
-  private bulletPool!: BulletPool;
-  private sceneWorld!: SceneWorld;
-  private kataSys!: GunKataTime;
-  private touchPad!: TouchPad;
+  private hero!: LanternWarden;
+  private bulletPool!: TalismanProjectilePool;
+  private sceneWorld!: NightTownWorld;
+  private kataSys!: LanternArray;
+  private touchPad!: LanternHUD;
 
   // 容器层
   private entityRoot!: Node;
@@ -54,11 +54,11 @@ export class GameScene extends Component {
   private hasFinished: boolean = false;
   private coinsInGame: number = 0;
 
-  // 摇杆输入与射击朝向
+  // 摇杆输入与放符朝向
   private currentMoveDir: Vec3 = new Vec3(0, 0, 0);
   private currentAimDir: Vec3 = new Vec3(1, 0, 0);
 
-  // 翻滚冷却
+  // 闪避冷却
   private rollCoolTimer: number = 0;
   private canRevive: boolean = true; // 每局提供一次广告复活机会
   private handLimit: number = 5;
@@ -68,6 +68,7 @@ export class GameScene extends Component {
   private adPending: boolean = false;
   private pendingShots: { data: BulletData; delay: number }[] = [];
   private pendingKataShots: { run: () => void; delay: number }[] = [];
+  private residualTalismans: { node: Node; life: number; maxLife: number; radius: number }[] = [];
 
   initialize(ui: GameUI, level: number, onFinish: (result: GameResult) => void, onMenu: () => void) {
     this.level = level;
@@ -94,64 +95,64 @@ export class GameScene extends Component {
     this.timeScale = 1.0;
     this.canRevive = true;
 
-    // 初始化西部主题原生音频系统
-    SoundMgr.inst.init(root);
+    // 初始化古镇夜巡主题原生音频系统
+    LanternSound.inst.init(root);
 
-    // 读取存档并赋予金币与初始枪支
+    // 读取存档并赋予灵火与初始符灯
     const profile = ProfileMgr.load();
     this.coinsInGame = profile.coins;
     this.gunSys.curGun = profile.curGun || 'revolver';
 
     // 1. 创建场景背景与掩体
-    const worldNode = new Node('SceneWorldNode');
+    const worldNode = new Node('NightTownWorldNode');
     root.addChild(worldNode);
-    this.sceneWorld = worldNode.addComponent(SceneWorld);
+    this.sceneWorld = worldNode.addComponent(NightTownWorld);
     this.sceneWorld.buildStage(level);
     this.sceneWorld.onBoxBreak = (pos, isExp) => this.handleBoxBroken(pos, isExp);
 
-    // 2. 实体层（牛仔、敌人、Boss）
+    // 2. 实体层（巡夜师、敌人、Boss）
     this.entityRoot = new Node('EntityRoot');
     root.addChild(this.entityRoot);
 
-    // 3. 子弹特效层
-    const bNode = new Node('BulletPoolNode');
+    // 3. 飞符特效层
+    const bNode = new Node('TalismanProjectilePoolNode');
     root.addChild(bNode);
-    this.bulletPool = bNode.addComponent(BulletPool);
+    this.bulletPool = bNode.addComponent(TalismanProjectilePool);
     this.bulletPool.onShakeScreen = intensity => this.shakeWorld(intensity);
 
-    // 4. 枪斗时刻层
-    const kataNode = new Node('KataNode');
+    // 4. 巡夜灯阵层
+    const kataNode = new Node('LanternArrayNode');
     root.addChild(kataNode);
-    this.kataSys = kataNode.addComponent(GunKataTime);
+    this.kataSys = kataNode.addComponent(LanternArray);
     this.kataSys.onTimeSlow = factor => { this.timeScale = factor; };
     this.kataSys.onExecuteKata = targets => this.executeKataShooting(targets);
     this.kataSys.onEnergyChange = (cur, max) => this.touchPad.redrawKataBadge(cur, max);
 
-    // 5. 实例化主角牛仔
-    const heroNode = new Node('HeroCowboy');
+    // 5. 实例化主角巡夜师
+    const heroNode = new Node('LanternWardenNode');
     heroNode.setPosition(0, -180, 0);
     this.entityRoot.addChild(heroNode);
-    this.hero = heroNode.addComponent(HeroActor);
+    this.hero = heroNode.addComponent(LanternWarden);
     this.hero.switchGun(this.gunSys.curGun);
 
     // 6. UI与触控面板层
     this.uiRoot = new Node('UIRoot');
     root.addChild(this.uiRoot);
-    this.touchPad = this.uiRoot.addComponent(TouchPad);
+    this.touchPad = this.uiRoot.addComponent(LanternHUD);
 
     // 关联触摸与电脑端键盘事件
     this.bindTouchControls();
     this.bindKeyboardControls();
 
     // 7. 关卡调度导演初始化
-    this.director = new StageDirector(level);
+    this.director = new NightTownDirector(level);
     this.director.onWaveStart = (w, title) => {
       this.touchPad.updateStageName(`${this.director.stageInfo.name} - ${title}`);
     };
     this.director.onTriggerUpgrade = () => this.popRogueliteUpgrade();
     this.director.onStageVictory = () => this.handleVictory();
 
-    // 8. 开局发初始手牌
+    // 8. 开局发初始符箓栏
     this.deck.resetDeck();
     this.deck.fillHand(5);
     this.refreshHandUI();
@@ -173,7 +174,7 @@ export class GameScene extends Component {
       }
     };
 
-    // 关联手牌选择变更
+    // 关联符箓栏选择变更
     this.touchPad.onSelectionChange = (selectedIds) => {
       const hand = this.deck.getHand();
       if (selectedIds.length > 0) {
@@ -186,18 +187,18 @@ export class GameScene extends Component {
       }
     };
 
-    // 出牌射击大按钮
+    // 出牌放符大按钮
     this.touchPad.onFireCombo = () => {
       if (this.isPaused || this.hero.curAction === 'dead') return;
       this.fireBestCombo();
     };
 
-    // 翻滚闪避大按钮
+    // 闪避闪避大按钮
     this.touchPad.onRoll = () => {
       this.triggerHeroRoll();
     };
 
-    // 枪斗时刻大徽章激活
+    // 巡夜灯阵大徽章激活
     this.touchPad.onTriggerKata = () => {
       if (this.isPaused || !this.kataSys.isReady()) return;
       const enemyPositions = this.director.activeEnemies.map(e => e.node.position);
@@ -207,7 +208,7 @@ export class GameScene extends Component {
       this.kataSys.triggerKata(this.hero.node.position, enemyPositions);
     };
 
-    // 点击单张手牌快速打出
+    // 点击单张符箓栏快速打出
     this.touchPad.onCardClick = card => {
       if (this.isPaused || this.hero.curAction === 'dead') return;
       const combo: HandCombo = {
@@ -215,7 +216,7 @@ export class GameScene extends Component {
         cards: [card],
         power: 1.0,
         mainSuit: card.suit,
-        name: '单牌点射'
+        name: '单符驱邪'
       };
       this.executeFire(combo);
     };
@@ -229,7 +230,7 @@ export class GameScene extends Component {
       this.isPaused = true;
       // 调用激励广告统一服务
       void rewardedAdGameService.show('trump_supply', () => {
-        // 观看成功奖励：塞入万能Joker并补满手牌，同时触发枪斗时刻蓄能！
+        // 观看成功奖励：塞入万能Joker并补满符箓栏，同时触发巡夜灯阵蓄能！
         if (!this.isValid || this.hasFinished) return;
         if (this.deck.getHand().length >= this.handLimit) {
           this.deck.discardCards([this.deck.getHand()[0]]);
@@ -238,7 +239,7 @@ export class GameScene extends Component {
         this.deck.fillHand(this.handLimit);
         this.refreshHandUI();
         this.kataSys.addEnergy(40);
-        this.showFloatNotice('获得万能王牌Joker！');
+        this.showFloatNotice('获得万能镇煞符！');
       }).catch(() => {
         if (this.isValid) this.showFloatNotice('广告暂不可用，请稍后重试');
       }).then(() => {
@@ -278,17 +279,17 @@ export class GameScene extends Component {
     this.keyState[e.keyCode] = true;
     this.calcKeyDir();
 
-    // 空格键翻滚
+    // 空格键闪避
     if (e.keyCode === KeyCode.SPACE) {
       this.triggerHeroRoll();
     }
-    // J 键或者回车键开火打出最优组合
+    // J 键或者回车键驱邪打出最优组合
     else if (e.keyCode === KeyCode.KEY_J || e.keyCode === KeyCode.ENTER) {
       if (!this.isPaused && this.hero.curAction !== 'dead') {
         this.fireBestCombo();
       }
     }
-    // K 键或 E 键触发枪斗时刻
+    // K 键或 E 键触发巡夜灯阵
     else if (e.keyCode === KeyCode.KEY_K || e.keyCode === KeyCode.KEY_E) {
       if (!this.isPaused && this.kataSys.isReady()) {
         const enemyPositions = this.director.activeEnemies.map(en => en.node.position);
@@ -298,7 +299,7 @@ export class GameScene extends Component {
         this.kataSys.triggerKata(this.hero.node.position, enemyPositions);
       }
     }
-    // 数字键 1 到 5 打出对应手牌
+    // 数字键 1 到 5 打出对应符箓栏
     else if (e.keyCode >= KeyCode.DIGIT_1 && e.keyCode <= KeyCode.DIGIT_5) {
       const idx = e.keyCode - KeyCode.DIGIT_1;
       const hand = this.deck.getHand();
@@ -309,7 +310,7 @@ export class GameScene extends Component {
           cards: [card],
           power: 1.0,
           mainSuit: card.suit,
-          name: '单牌点射'
+          name: '单符驱邪'
         };
         this.executeFire(combo);
       }
@@ -349,22 +350,58 @@ export class GameScene extends Component {
     }
   }
 
-  // 触发翻滚闪避（触控按键和键盘空格共用）
+  // 触发闪避闪避（触控按键和键盘空格共用）
   private triggerHeroRoll() {
     if (this.isPaused || this.rollCoolTimer > 0 || this.hero.curAction === 'dead' || this.hero.curAction === 'roll') return;
     this.rollCoolTimer = this.rollCooldown;
     const rollDir = this.currentMoveDir.length() > 0.1 ? this.currentMoveDir.clone().normalize() : this.currentAimDir.clone();
+    this.spawnResidualTalisman(this.hero.node.position.clone());
     this.hero.startRoll(rollDir);
-    SoundMgr.inst.playRoll();
+    LanternSound.inst.playRoll();
 
-    // 快速翻滚位移
+    // 快速闪避位移
     this.rollDirection.set(rollDir);
 
-    // 翻滚闪避加枪斗值
+    // 闪避闪避加灯阵值
     this.kataSys.addEnergy(3);
   }
 
-  // 刷新手牌UI展示与出牌大按钮提示文本
+  // 闪避留下短暂残符：复用现有帧循环和距离检测，不建立新物理系统
+  private spawnResidualTalisman(pos: Vec3) {
+    const node = new Node('ResidualTalisman');
+    node.setPosition(pos);
+    this.entityRoot.addChild(node);
+    const g = node.addComponent(Graphics);
+    g.fillColor = new Color(231, 214, 169, 205);
+    g.moveTo(-17, -24); g.lineTo(15, -22); g.lineTo(18, 23); g.lineTo(-14, 26); g.close(); g.fill();
+    g.strokeColor = new Color(176, 49, 44, 235); g.lineWidth = 2;
+    g.moveTo(-8, 15); g.bezierCurveTo(8, 10, -8, 0, 8, -5);
+    g.moveTo(-7, -11); g.lineTo(8, -16); g.stroke();
+    g.strokeColor = new Color(228, 190, 101, 155); g.lineWidth = 1.5; g.circle(0, 0, 34); g.stroke();
+    node.setScale(0.72, 0.72, 1);
+    tween(node).to(0.16, { scale: new Vec3(1.08, 1.08, 1) }).to(0.45, { scale: new Vec3(0.9, 0.9, 1) }).start();
+    this.residualTalismans.push({ node, life: 0.78, maxLife: 0.78, radius: 72 });
+  }
+
+  private updateResidualTalismans(dt: number) {
+    for (let i = this.residualTalismans.length - 1; i >= 0; i--) {
+      const seal = this.residualTalismans[i];
+      if (!seal.node.isValid) { this.residualTalismans.splice(i, 1); continue; }
+      seal.life -= dt;
+      const pos = seal.node.position;
+      for (const enemy of this.director.activeEnemies) {
+        if (enemy?.isValid && !enemy.isDead && Vec3.distance(pos, enemy.node.position) <= seal.radius) {
+          enemy.applyResidualSlow(0.28, 0.55);
+        }
+      }
+      if (seal.life <= 0) {
+        seal.node.destroy();
+        this.residualTalismans.splice(i, 1);
+      }
+    }
+  }
+
+  // 刷新符箓栏UI展示与出牌大按钮提示文本
   private refreshHandUI() {
     const hand = this.deck.getHand();
     this.touchPad.updateHandDisplay(hand);
@@ -406,7 +443,7 @@ export class GameScene extends Component {
     if (hand.length === 0) return;
 
     let combo: HandCombo;
-    // 优先检查玩家是否手动点选了手牌组合
+    // 优先检查玩家是否手动点选了符箓栏组合
     const selIds = Array.from(this.touchPad.selectedIds);
     if (selIds.length > 0) {
       const picked = hand.filter(c => selIds.indexOf(c.id) >= 0);
@@ -419,25 +456,25 @@ export class GameScene extends Component {
     this.executeFire(combo);
   }
 
-  // 执行具体开火流程：飞牌动画 -> 枪口闪光 -> 投射子弹
+  // 执行具体驱邪流程：飞牌动画 -> 符灯闪光 -> 投射飞符
   private executeFire(combo: HandCombo) {
     if (this.isPaused || this.hasFinished || this.fireCoolTimer > 0 || this.hero.curAction === 'dead' || combo.cards.length === 0) return;
     const handIds = new Set(this.deck.getHand().map(c => c.id));
     if (combo.cards.some(c => !handIds.has(c.id))) return;
     this.fireCoolTimer = this.gunSys.getConfig().fireRate;
 
-    // 自动微调枪口对准最近敌人
+    // 自动微调符灯对准最近敌人
     const nearest = this.findNearestTargetPos();
     if (nearest) {
       this.currentAimDir.set(nearest.x - this.hero.node.position.x, nearest.y - this.hero.node.position.y, 0).normalize();
       this.hero.setAim(this.currentAimDir);
     }
 
-    // 从手牌中消耗
+    // 从符箓栏中消耗
     this.deck.discardCards(combo.cards);
     this.deck.recordPlay(combo.type);
 
-    // 累计枪斗值（牌型越高，充能越快）
+    // 累计灯阵值（牌型越高，充能越快）
     let addKata = 3;
     if (combo.type === 'pair') addKata = 6;
     if (combo.type === 'trips') addKata = 10;
@@ -446,7 +483,7 @@ export class GameScene extends Component {
     if (combo.type === 'quads') addKata = 100;
     this.kataSys.addEnergy(addKata);
 
-    // 若打出四条，直接激活短暂枪斗时刻！
+    // 若打出四条，直接激活短暂巡夜灯阵！
     if (combo.type === 'quads') {
       const enemyPositions = this.director.activeEnemies.map(e => e.node.position);
       if (this.director.activeBoss && this.director.activeBoss.isValid) {
@@ -457,17 +494,17 @@ export class GameScene extends Component {
 
     // 枪手后坐力动作
     this.hero.playShootRecoil();
-    SoundMgr.inst.playShoot();
-    SoundMgr.inst.playCard();
+    LanternSound.inst.playShoot();
+    LanternSound.inst.playCard();
 
-    // 立即获得最新的枪口位置与朝向，瞬间发射！
+    // 立即获得最新的符灯位置与朝向，瞬间发射！
     const muzzle = this.hero.getMuzzlePos();
     const heroPos = this.hero.node.position;
 
-    // 枪口火焰与烟雾弹壳
+    // 符灯火焰与烟雾弹壳
     this.bulletPool.playMuzzleFlash(muzzle, this.currentAimDir);
 
-    // 生成各花色与牌型的专属子弹即刻出膛
+    // 生成各花色与牌型的专属飞符即刻出膛
     const { bullets, delays } = this.gunSys.makeBullets(muzzle, this.currentAimDir, combo);
     for (let i = 0; i < bullets.length; i++) {
       const bData = bullets[i];
@@ -479,9 +516,9 @@ export class GameScene extends Component {
       }
     }
 
-    // 纸牌飞出并化作流光注入枪口
+    // 符箓飞出并化作流光注入符灯
     if (combo.cards.length > 0) {
-      CardRenderer.playFlyAnim(this.worldRoot, combo.cards[0], new Vec3(0, -450, 0), heroPos, () => {});
+      TalismanRenderer.playFlyAnim(this.worldRoot, combo.cards[0], new Vec3(0, -450, 0), heroPos, () => {});
     }
 
     // 补充新牌
@@ -489,10 +526,10 @@ export class GameScene extends Component {
     this.refreshHandUI();
   }
 
-  // 枪斗时刻极速拔枪扫射
+  // 巡夜灯阵极速拔枪扫射
   private executeKataShooting(targets: Vec3[]) {
     if (this.hasFinished || this.hero.curAction === 'dead') return;
-    SoundMgr.inst.playKata();
+    LanternSound.inst.playKata();
     const hPos = this.hero.node.position;
     for (let i = 0; i < targets.length; i++) {
       const tPos = targets[i];
@@ -524,7 +561,7 @@ export class GameScene extends Component {
     }
   }
 
-  // 敌怪开火处理
+  // 敌怪驱邪处理
   private handleEnemyFire(fromPos: Vec3, toPos: Vec3, dmg: number) {
     const dir = new Vec3(toPos.x - fromPos.x, toPos.y - fromPos.y, 0).normalize();
     this.bulletPool.spawnBullet({
@@ -588,20 +625,20 @@ export class GameScene extends Component {
     }
   }
 
-  // 掩体木箱被打碎
+  // 掩体符封木柜被打碎
   private handleBoxBroken(pos: Vec3, isExplode: boolean) {
     if (isExplode) {
-      // 炸药桶轰鸣爆炸
+      // 香炉轰鸣爆炸
       this.bulletPool.playExplosion(pos, 90);
       // 炸裂飞溅玻璃与碎石
-      CardRenderer.playGlassShards(this.worldRoot, pos);
+      TalismanRenderer.playGlassShards(this.worldRoot, pos);
       // 伤害周边所有敌人
       this.damageEnemiesInRadius(pos, 90, 80);
     } else {
       // 木屑与微量碎屑飞散
       this.bulletPool.playWoodSplinters(pos);
       if (Math.random() < 0.5) {
-        CardRenderer.playGlassShards(this.worldRoot, pos);
+        TalismanRenderer.playGlassShards(this.worldRoot, pos);
       }
     }
   }
@@ -630,23 +667,23 @@ export class GameScene extends Component {
     }
   }
 
-  // 敌人被消灭，掉落金币与统计
-  private handleEnemyKilled(e: EnemyActor) {
+  // 敌人被消灭，掉落灵火与统计
+  private handleEnemyKilled(e: SpiritActor) {
     if (this.director.activeEnemies.indexOf(e) < 0) return;
     const gold = e.isElite ? 25 : 8;
     this.coinsInGame += gold;
     this.touchPad.updateCoins(this.coinsInGame);
     ProfileMgr.addGold(gold);
-    // 敌人被干掉时，爆散出一小堆赏金金币并播放叮当金币音
-    SoundMgr.inst.playCoin();
+    // 敌人被干掉时，爆散出一小堆灵息灵火并播放叮当灵火音
+    LanternSound.inst.playCoin();
     this.bulletPool.playCoinDrop(e.node.position, e.isElite ? 8 : 4);
     this.director.recordKill(e);
   }
 
-  // 弹出赌桌三选一升级
+  // 弹出符案三选一升级
   private popRogueliteUpgrade() {
     this.isPaused = true; // 冻结战斗，敌人停止攻击
-    SoundMgr.inst.playCard();
+    LanternSound.inst.playCard();
     const candidates = [...BuffPool].sort(() => Math.random() - 0.5).slice(0, 3);
     this.touchPad.showUpgradeChoices(candidates);
   }
@@ -754,8 +791,8 @@ export class GameScene extends Component {
     if (this.hasFinished) return;
     this.hasFinished = true;
     this.isPaused = true;
-    SoundMgr.inst.playWin();
-    this.showFloatNotice('赏金目标全歼！大获全胜！');
+    LanternSound.inst.playWin();
+    this.showFloatNotice('灵息目标全歼！大获全胜！');
     this.scheduleOnce(() => {
       this.finishGame('victory');
     }, 1.2);
@@ -787,7 +824,7 @@ export class GameScene extends Component {
       titleNode.setPosition(0, 65, 0);
       popRevive.addChild(titleNode);
       const tl = titleNode.addComponent(Label);
-      tl.string = '猎人濒死！是否突围？';
+      tl.string = '灯火将熄，是否续灯？';
       tl.fontSize = 20;
       tl.color = new Color(255, 230, 150);
 
@@ -808,7 +845,7 @@ export class GameScene extends Component {
       const okTxt = new Node('Txt');
       okBtn.addChild(okTxt);
       const okl = okTxt.addComponent(Label);
-      okl.string = '观看广告复活 (AD)';
+      okl.string = '观看广告续灯 (AD)';
       okl.fontSize = 17;
       okl.color = new Color(255, 245, 210);
 
@@ -829,7 +866,7 @@ export class GameScene extends Component {
           // 在主角脚下爆开强力击退冲击波，重伤近身敌人
           this.bulletPool.playExplosion(this.hero.node.position, 160);
           this.damageEnemiesInRadius(this.hero.node.position, 160, 90);
-          this.showFloatNotice('绝处逢生！恢复70%生命！');
+          this.showFloatNotice('灯火重燃！恢复70%生命！');
         }).catch(() => false).then(granted => {
           if (!this.isValid || this.hasFinished) return;
           this.adPending = false;
@@ -843,7 +880,7 @@ export class GameScene extends Component {
       cancelBtn.setPosition(0, -75, 0);
       popRevive.addChild(cancelBtn);
       const cl = cancelBtn.addComponent(Label);
-      cl.string = '放弃抵抗';
+      cl.string = '灯灭归寂';
       cl.fontSize = 16;
       cl.color = new Color(170, 160, 155);
 
@@ -867,6 +904,7 @@ export class GameScene extends Component {
 
     const dt = rawDt * this.timeScale;
     this.kataSys.updateKata(rawDt);
+    this.updateResidualTalismans(dt);
     for (let i = this.pendingKataShots.length - 1; i >= 0; i--) {
       const shot = this.pendingKataShots[i];
       shot.delay -= rawDt;
@@ -926,7 +964,7 @@ export class GameScene extends Component {
             const mNode = new Node(`Minion_${Date.now()}_${i}`);
             mNode.setPosition(pos.x + (i === 0 ? -50 : 50), pos.y - 40, 0);
             this.entityRoot.addChild(mNode);
-            const m = mNode.addComponent(EnemyActor);
+            const m = mNode.addComponent(SpiritActor);
             m.init('gunner', false, this.level);
             m.onEnemyFire = (f, t, d) => this.handleEnemyFire(f, t, d);
             this.director.activeEnemies.push(m);
@@ -950,14 +988,14 @@ export class GameScene extends Component {
       this.director.activeBoss.updateBoss(dt, hPos);
     }
 
-    // 5. 更新子弹物理与特效
+    // 5. 更新飞符物理与特效
     this.bulletPool.updateBullets(dt, { minX: -320, maxX: 320, minY: -580, maxY: 580 });
 
-    // 6. 子弹碰撞检测
+    // 6. 飞符碰撞检测
     this.checkBulletCollisions();
   }
 
-  // 子弹与实体/掩体碰撞判定
+  // 飞符与实体/掩体碰撞判定
   private checkBulletCollisions() {
     const bullets = this.bulletPool.getActiveBullets();
     const hPos = this.hero.node.position;
@@ -968,10 +1006,10 @@ export class GameScene extends Component {
       const bPos = b.node.position;
 
       if (b.data.isHero) {
-        // 玩家发射的子弹 -> 检测掩体与敌人
+        // 玩家发射的飞符 -> 检测掩体与敌人
         let consumed = false;
 
-        // 检测木箱与炸药桶
+        // 检测符封木柜与香炉
         for (let oi = this.sceneWorld.obstacles.length - 1; oi >= 0; oi--) {
           const ob = this.sceneWorld.obstacles[oi];
           if (!b.hitTargets.has(ob.node) && Vec3.distance(bPos, ob.pos) <= ob.width * 0.6) {
@@ -1003,32 +1041,32 @@ export class GameScene extends Component {
               const killed = enemy.takeDmg(b.data.dmg);
               if (killed) this.handleEnemyKilled(enemy);
 
-              // 贴身射击产生小幅物理击退
+              // 贴身放符产生小幅物理击退
               if (isPointBlank && !killed) {
                 const repulseDir = new Vec3(ePos.x - hPos.x, ePos.y - hPos.y, 0).normalize();
                 enemy.node.setPosition(ePos.x + repulseDir.x * 25, ePos.y + repulseDir.y * 25, 0);
               }
 
               // 飞溅火花与跳跃伤害数字
-              SoundMgr.inst.playHit();
+              LanternSound.inst.playHit();
               this.bulletPool.playHitSparks(bPos, b.data.dir);
               this.bulletPool.playDamageNumber(enemy.node.position, b.data.dmg);
 
-              // 黑桃穿透时划出暗紫色割裂光痕
+              // 雷印穿透时划出暗紫色割裂光痕
               if (b.data.suit === 'spade') {
                 this.bulletPool.playSpadeSlash(enemy.node.position);
               }
 
-              // 红桃吸血特性：发射小红心飞向牛仔主角
+              // 火印吸血特性：发射小红心飞向巡夜师主角
               if (b.data.vampire > 0) {
                 this.bulletPool.playVampireFly(enemy.node.position, this.hero.node);
                 this.hero.heal(b.data.vampire);
                 this.touchPad.updateHp(this.hero.hp, this.hero.maxHp, this.hero.shield);
               }
 
-              // 方块范围爆炸
+              // 灵印范围爆炸
               if (b.data.blastR > 0) {
-                SoundMgr.inst.playExplosion();
+                LanternSound.inst.playExplosion();
                 this.bulletPool.playExplosion(bPos, b.data.blastR);
                 this.damageEnemiesInRadius(bPos, b.data.blastR, b.data.dmg * 0.6);
               }
@@ -1053,7 +1091,7 @@ export class GameScene extends Component {
           if (!b.hitTargets.has(boss.node) && Vec3.distance(bPos, boss.node.position) <= 65) {
             b.hitTargets.add(boss.node);
             const killed = boss.takeDmg(b.data.dmg);
-            SoundMgr.inst.playHit();
+            LanternSound.inst.playHit();
             this.bulletPool.playHitSparks(bPos, b.data.dir);
             this.bulletPool.playDamageNumber(boss.node.position, b.data.dmg);
 
@@ -1067,12 +1105,12 @@ export class GameScene extends Component {
               this.touchPad.updateHp(this.hero.hp, this.hero.maxHp, this.hero.shield);
             }
             if (b.data.blastR > 0) {
-              SoundMgr.inst.playExplosion();
+              LanternSound.inst.playExplosion();
               this.bulletPool.playExplosion(bPos, b.data.blastR);
               this.damageEnemiesInRadius(bPos, b.data.blastR, b.data.dmg * 0.6);
             }
             if (killed) {
-              SoundMgr.inst.playCoin();
+              LanternSound.inst.playCoin();
               this.bulletPool.playCoinDrop(boss.node.position, 15);
               this.director.recordBossKill();
             }
@@ -1080,11 +1118,11 @@ export class GameScene extends Component {
           }
         }
       } else {
-        // 敌方子弹 -> 击打主角
+        // 敌方飞符 -> 击打主角
         if (Vec3.distance(bPos, hPos) <= 24) {
           const dead = this.hero.takeDmg(b.data.dmg);
           // 主角被击中：播放受击音效、爆出血红火花、红色扣血飘字并微晃镜头
-          SoundMgr.inst.playHurt();
+          LanternSound.inst.playHurt();
           this.bulletPool.playHitSparks(bPos, b.data.dir, new Color(255, 60, 60));
           this.bulletPool.playDamageNumber(hPos, b.data.dmg, true);
           this.touchPad.updateHp(this.hero.hp, this.hero.maxHp, this.hero.shield);

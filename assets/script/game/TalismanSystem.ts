@@ -1,11 +1,11 @@
-// 枪械武器逻辑系统
-// 负责5大武器特性计算、牌型能力乘区与子弹投射参数生成
+// 符器武器逻辑系统
+// 负责5大武器特性计算、牌型能力乘区与飞符投射参数生成
 
 import { Vec3 } from 'cc';
-import { BulletData } from './BulletPool';
-import { ComboType, GunConfig, GunList, GunType, HandCombo, SuitType } from './GameData';
+import { BulletData } from './TalismanProjectilePool';
+import { ComboType, GunConfig, GunList, GunType, HandCombo, SuitType } from './NightTownData';
 
-export class GunSystem {
+export class TalismanSystem {
   public curGun: GunType = 'revolver';
   public extraBounce: number = 0;
   public extraPierce: number = 0;
@@ -25,7 +25,7 @@ export class GunSystem {
     return GunList[this.curGun] || GunList.revolver;
   }
 
-  // 计算打出一手牌时生成的所有子弹数据
+  // 计算打出一符箓栏时生成的所有飞符数据
   makeBullets(muzzlePos: Vec3, aimDir: Vec3, combo: HandCombo): { bullets: BulletData[]; delays: number[] } {
     const cfg = this.getConfig();
     const result: BulletData[] = [];
@@ -36,7 +36,7 @@ export class GunSystem {
 
     // 武器对牌型的专属强化加成
     if (this.curGun === 'revolver' && combo.type === 'single') {
-      baseDmg *= 1.25; // 左轮强化单牌
+      baseDmg *= 1.25; // 铜铃符灯强化单符
     }
     if (this.curGun === 'lever' && combo.type === 'straight') {
       baseDmg *= 1.35; // 杠杆步枪强化顺子
@@ -45,10 +45,10 @@ export class GunSystem {
       baseDmg *= 1.45; // 双管强化对子
     }
     if (this.curGun === 'bounce' && combo.mainSuit === 'club') {
-      baseDmg *= 1.3; // 弹跳左轮强化梅花
+      baseDmg *= 1.3; // 回风灵符强化风印
     }
     if (this.curGun === 'cannon' && (combo.mainSuit === 'diamond' || combo.type === 'fullhouse')) {
-      baseDmg *= 1.25; // 炸药筒强化方块与重爆
+      baseDmg *= 1.25; // 炸药筒强化灵印与重爆
     }
 
     // 致命一击暴击判定
@@ -62,7 +62,7 @@ export class GunSystem {
     let blastRadius = (combo.mainSuit === 'diamond' || combo.type === 'fullhouse' ? 70 : 0) * this.blastRadiusMul;
     let vampireAmount = combo.mainSuit === 'heart' ? 1 + this.vampireBonus : 0;
 
-    // 弹跳左轮额外加成
+    // 回风灵符额外加成
     if (this.curGun === 'bounce') {
       bounceCount += 2;
     }
@@ -78,7 +78,7 @@ export class GunSystem {
     const rad = Math.atan2(aimDir.y, aimDir.x);
     const spd = 620;
 
-    // 根据牌型构建子弹投射模式
+    // 根据牌型构建飞符投射模式
     switch (combo.type) {
       case 'single': {
         // 单发精准弹
@@ -100,7 +100,7 @@ export class GunSystem {
         break;
       }
       case 'pair': {
-        // 双发并射（双管猎枪则增加到4发）
+        // 双印并发（双叠火符增加到4道）
         const shotCount = this.curGun === 'shotgun' ? 4 : 2;
         const spread = 0.12;
         for (let i = 0; i < shotCount; i++) {
@@ -149,7 +149,7 @@ export class GunSystem {
         break;
       }
       case 'straight': {
-        // 顺子：短时间高速连续射击（机枪式倾泻）
+        // 顺子：短时间高速连续放符（机枪式倾泻）
         const bulletCount = this.curGun === 'lever' ? 7 : 5;
         const interval = this.straightSpdUp ? 0.05 : 0.08;
         for (let i = 0; i < bulletCount; i++) {
@@ -176,7 +176,7 @@ export class GunSystem {
         break;
       }
       case 'flush': {
-        // 同花：释放对应花色的究极大招弹（极大弹头与强力倍增）
+        // 同花：释放对应花色的究极大招弹（极大符印与强力倍增）
         result.push({
           pos: muzzlePos.clone(),
           dir: aimDir.clone(),

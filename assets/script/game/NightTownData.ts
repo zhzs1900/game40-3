@@ -2,10 +2,10 @@ import { AudioClip, AudioSource, director, Node, resources } from 'cc';
 import { GameStorage } from '../framework/core/GameStorage';
 import { baseGameConfig } from '../config/baseGameConfig';
 
-// 花色定义：黑桃、红桃、梅花、方块
+// 花色定义：雷印、火印、风印、灵印
 export type SuitType = 'spade' | 'heart' | 'club' | 'diamond';
 
-// 单张扑克牌数据
+// 单张符箓数据
 export interface CardItem {
   id: number;          // 唯一编号
   suit: SuitType;      // 花色
@@ -15,13 +15,13 @@ export interface CardItem {
 
 // 组合牌型类别
 export type ComboType = 
-  | 'single'     // 单牌：普通射击
+  | 'single'     // 单牌：普通放符
   | 'pair'       // 对子：双发并射
   | 'trips'      // 三条：三向散射
   | 'straight'   // 顺子：高速连射
   | 'flush'      // 同花：花色大招
   | 'fullhouse'  // 葫芦：重型爆破
-  | 'quads';     // 四条：枪斗连击
+  | 'quads';     // 四条：灯阵连击
 
 // 牌型计算结果
 export interface HandCombo {
@@ -32,16 +32,16 @@ export interface HandCombo {
   name: string;        // 中文名称
 }
 
-// 枪械类型
+// 符器类型
 export type GunType = 'revolver' | 'lever' | 'shotgun' | 'bounce' | 'cannon';
 
-// 枪械具体配置
+// 符器具体配置
 export interface GunConfig {
   type: GunType;
   name: string;
   desc: string;
   fireRate: number;    // 射速(秒)
-  clipSize: number;    // 弹夹手牌上限
+  clipSize: number;    // 弹夹符箓栏上限
   dmgMul: number;      // 基础伤害倍率
   special: string;     // 特性描述
 }
@@ -50,7 +50,7 @@ export interface GunConfig {
 export const GunList: Record<GunType, GunConfig> = {
   revolver: {
     type: 'revolver',
-    name: '牛仔左轮',
+    name: '铜铃符灯',
     desc: '轻巧拔枪快，单牌暴击率超高',
     fireRate: 0.28,
     clipSize: 5,
@@ -59,7 +59,7 @@ export const GunList: Record<GunType, GunConfig> = {
   },
   lever: {
     type: 'lever',
-    name: '温彻斯特',
+    name: '雷纹长符',
     desc: '杠杆式快连发，顺子伤害极强',
     fireRate: 0.35,
     clipSize: 5,
@@ -68,7 +68,7 @@ export const GunList: Record<GunType, GunConfig> = {
   },
   shotgun: {
     type: 'shotgun',
-    name: '双管猎枪',
+    name: '双叠火符',
     desc: '近身双发对子爆发毁灭伤害',
     fireRate: 0.5,
     clipSize: 4,
@@ -77,21 +77,21 @@ export const GunList: Record<GunType, GunConfig> = {
   },
   bounce: {
     type: 'bounce',
-    name: '跳弹左轮',
-    desc: '特制铅弹，梅花跳弹次数翻倍',
+    name: '回风灵符',
+    desc: '特制铅弹，风印跳弹次数翻倍',
     fireRate: 0.3,
     clipSize: 5,
     dmgMul: 1.1,
-    special: '强化梅花弹射',
+    special: '强化风印弹射',
   },
   cannon: {
     type: 'cannon',
-    name: '炸药发射筒',
-    desc: '改造的重炮，方块牌型全场轰炸',
+    name: '镇煞法印',
+    desc: '改造的重炮，灵印牌型全场轰炸',
     fireRate: 0.65,
     clipSize: 5,
     dmgMul: 1.5,
-    special: '强化方块爆炸',
+    special: '强化灵印爆炸',
   }
 };
 
@@ -105,20 +105,20 @@ export interface BuffOption {
 
 // 随机升级候选池
 export const BuffPool: BuffOption[] = [
-  { id: 'bounce_plus', name: '跳弹+1', desc: '梅花跳弹次数额外+1', icon: '♣' },
-  { id: 'vampire', name: '红桃吸血', desc: '红桃命中额外回复1点生命', icon: '♥' },
-  { id: 'straight_spd', name: '顺子加速', desc: '顺子连发速度大幅提升', icon: '♠' },
-  { id: 'blast_range', name: '方块爆破', desc: '方块爆炸范围扩大50%', icon: '♦' },
-  { id: 'pierce_dmg', name: '黑桃穿透', desc: '黑桃额外穿透一个目标', icon: '♠' },
-  { id: 'hand_expand', name: '弹匣+1', desc: '手牌上限增加到6张', icon: '★' },
-  { id: 'roll_cool', name: '快速翻滚', desc: '翻滚冷却缩短至0.65秒', icon: '⚡' },
-  { id: 'crit_master', name: '暴击加成', desc: '暴击伤害倍率增加0.4', icon: '🎯' },
-  { id: 'gun_power', name: '重装火药', desc: '基础伤害倍率增加20%', icon: '💥' },
-  { id: 'shield_heart', name: '红桃护盾', desc: '获得20点临时战术护盾', icon: '🛡' },
-  { id: 'gun_shotgun', name: '双管猎枪', desc: '装备双管，对子双倍散弹', icon: '🔫' },
-  { id: 'gun_lever', name: '温彻斯特', desc: '装备步枪，顺子长程连轰', icon: '🔫' },
-  { id: 'gun_bounce', name: '弹跳左轮', desc: '装备跳弹枪，全弹道弹射', icon: '🔫' },
-  { id: 'gun_cannon', name: '炸药重炮', desc: '装备重型发射器，全炸裂', icon: '💣' },
+  { id: 'bounce_plus', name: '回风续符', desc: '风印回旋次数额外+1', icon: '风' },
+  { id: 'vampire', name: '火印养息', desc: '火印命中额外回复1点生命', icon: '火' },
+  { id: 'straight_spd', name: '疾书连符', desc: '连书符阵释放速度提升', icon: '雷' },
+  { id: 'blast_range', name: '灵印扩阵', desc: '灵印符阵范围扩大50%', icon: '灵' },
+  { id: 'pierce_dmg', name: '雷印贯邪', desc: '雷印额外贯穿一个目标', icon: '雷' },
+  { id: 'hand_expand', name: '符囊扩容', desc: '符箓栏上限增加到6张', icon: '符' },
+  { id: 'roll_cool', name: '踏罡轻身', desc: '闪避冷却缩短至0.65秒', icon: '步' },
+  { id: 'crit_master', name: '朱砂点睛', desc: '会心伤害倍率增加0.4', icon: '朱' },
+  { id: 'gun_power', name: '灵息灌注', desc: '基础驱邪伤害增加20%', icon: '息' },
+  { id: 'shield_heart', name: '护身灯衣', desc: '获得20点临时护身值', icon: '护' },
+  { id: 'gun_shotgun', name: '双叠火符', desc: '双印并发时爆发更强', icon: '火' },
+  { id: 'gun_lever', name: '雷纹长符', desc: '连书符阵更远更快', icon: '雷' },
+  { id: 'gun_bounce', name: '回风灵符', desc: '风印飞符强化回旋', icon: '风' },
+  { id: 'gun_cannon', name: '镇煞法印', desc: '灵印与合契符阵强化', icon: '灵' },
 ];
 
 // 关卡信息（共8个主要区域）
@@ -136,14 +136,14 @@ export interface AreaInfo {
 }
 
 export const StageList: AreaInfo[] = [
-  { level: 1, name: '边境车站', intro: '黄沙弥漫的火车站台，劫匪盘踞', bgTheme: 'station', bossName: '车站恶霸·独眼查理', bossHp: 650, waveCount: 3, enemyCount: 12, maxEnemies: 5, spawnInterval: 0.75 },
-  { level: 2, name: '荒漠酒馆街', intro: '危机四伏的西部街道，醉鬼与打手横行', bgTheme: 'saloon', bossName: '醉枪客·黑杰克', bossHp: 950, waveCount: 3, enemyCount: 14, maxEnemies: 6, spawnInterval: 0.70 },
-  { level: 3, name: '废弃矿区', intro: '阴暗的矿洞铁轨，埋伏着疯癫的炸药矿工', bgTheme: 'mine', bossName: '矿区工头·铁臂汉克', bossHp: 1250, waveCount: 4, enemyCount: 12, maxEnemies: 6, spawnInterval: 0.65 },
-  { level: 4, name: '峡谷铁路', intro: '绝壁铁轨之上，狂风呼啸的列车站斗', bgTheme: 'canyon', bossName: '铁道狂徒·烈焰乔', bossHp: 1600, waveCount: 4, enemyCount: 14, maxEnemies: 7, spawnInterval: 0.60 },
-  { level: 5, name: '淘金小镇', intro: '罪恶滋生的黄金小镇，警匪混杂', bgTheme: 'goldtown', bossName: '贪婪警长·银星布奇', bossHp: 2000, waveCount: 4, enemyCount: 16, maxEnemies: 7, spawnInterval: 0.56 },
-  { level: 6, name: '蒸汽工厂', intro: '黑烟滚滚的重型厂房，重装机械兵守卫', bgTheme: 'factory', bossName: '机械屠夫·麦克唐纳', bossHp: 2450, waveCount: 4, enemyCount: 18, maxEnemies: 8, spawnInterval: 0.52 },
-  { level: 7, name: '亡命赌场', intro: '纸醉金迷的地下赌城，隐藏着致命机关', bgTheme: 'casino', bossName: '千手发牌官·鬼手', bossHp: 2950, waveCount: 4, enemyCount: 20, maxEnemies: 9, spawnInterval: 0.48 },
-  { level: 8, name: '赏金王城', intro: '终局决战之地，直面掌控一切的黑牌赌王', bgTheme: 'palace', bossName: '黑牌赌王·卡特赖特', bossHp: 3500, waveCount: 4, enemyCount: 22, maxEnemies: 10, spawnInterval: 0.45 },
+  { level: 1, name: '青石巷口', intro: '灯火初灭，兽祟从旧宅阴影中扑出', bgTheme: 'stone_lane', bossName: '镇门灵·残面', bossHp: 650, waveCount: 3, enemyCount: 12, maxEnemies: 5, spawnInterval: 0.75 },
+  { level: 2, name: '纸伞长街', intro: '雨痕未干，执灯游魂沿檐下徘徊', bgTheme: 'umbrella_street', bossName: '镇门灵·锁灯', bossHp: 950, waveCount: 3, enemyCount: 14, maxEnemies: 6, spawnInterval: 0.70 },
+  { level: 3, name: '古井后巷', intro: '井口邪气翻涌，爆符傀儡藏在符封木柜间', bgTheme: 'old_well', bossName: '镇门灵·井魇', bossHp: 1250, waveCount: 4, enemyCount: 12, maxEnemies: 6, spawnInterval: 0.65 },
+  { level: 4, name: '风灯石桥', intro: '桥上夜风卷符，骑兽夜叉踏灯而来', bgTheme: 'lantern_bridge', bossName: '镇门灵·桥煞', bossHp: 1600, waveCount: 4, enemyCount: 14, maxEnemies: 7, spawnInterval: 0.60 },
+  { level: 5, name: '香火祠前', intro: '残香未熄，纸伞妖与游魂守住祠门', bgTheme: 'shrine_yard', bossName: '镇门灵·祠印', bossHp: 2000, waveCount: 4, enemyCount: 16, maxEnemies: 7, spawnInterval: 0.56 },
+  { level: 6, name: '封符仓院', intro: '木柜符封破裂，邪气沿地砖纹路蔓延', bgTheme: 'seal_store', bossName: '镇门灵·断符', bossHp: 2450, waveCount: 4, enemyCount: 18, maxEnemies: 8, spawnInterval: 0.52 },
+  { level: 7, name: '百灯戏台', intro: '空台灯影摇晃，群祟借戏面现形', bgTheme: 'opera_stage', bossName: '镇门灵·戏面', bossHp: 2950, waveCount: 4, enemyCount: 20, maxEnemies: 9, spawnInterval: 0.48 },
+  { level: 8, name: '镇门夜关', intro: '古镇尽头符封崩裂，镇门灵显露真身', bgTheme: 'town_gate', bossName: '镇门灵·开面', bossHp: 3500, waveCount: 4, enemyCount: 22, maxEnemies: 10, spawnInterval: 0.45 },
 ];
 
 // 玩家持久化存档数据结构
@@ -185,7 +185,7 @@ export class ProfileMgr {
     s.setJSON('gun_hero_data', data);
   }
 
-  // 加金币并立即存
+  // 加灵火并立即存
   static addGold(val: number): number {
     const d = this.load();
     d.coins = Math.max(0, d.coins + val);
@@ -194,20 +194,20 @@ export class ProfileMgr {
   }
 }
 
-// 西部枪战音效管理器
+// 古镇夜巡枪战音效管理器
 // 纯基于 Cocos 原生 AudioSource 与 resources.load 资源加载机制
 // 杜绝使用浏览器特有的 Web Audio / AudioContext，完美支持抖音小游戏、微信小游戏与原生端
-export class SoundMgr {
-  private static instance: SoundMgr | null = null;
+export class LanternSound {
+  private static instance: LanternSound | null = null;
   private audioNode: Node | null = null;
   private audioSource: AudioSource | null = null;
   private clipMap: Map<string, AudioClip> = new Map();
   private storage: GameStorage = new GameStorage(baseGameConfig.storageKeyPrefix);
 
   // 单例获取
-  static get inst(): SoundMgr {
+  static get inst(): LanternSound {
     if (!this.instance) {
-      this.instance = new SoundMgr();
+      this.instance = new LanternSound();
     }
     return this.instance;
   }
@@ -240,7 +240,7 @@ export class SoundMgr {
   init(rootNode?: Node) {
     this.ensureAudioSource(rootNode);
 
-    // 预先批量异步载入所有西部枪战音频剪辑
+    // 预先批量异步载入所有古镇夜巡枪战音频剪辑
     const soundList = [
       'shoot',
       'card',
@@ -295,12 +295,12 @@ export class SoundMgr {
     }
   }
 
-  // 牛仔拔枪射击
+  // 巡夜师拔枪放符
   playShoot(volume: number = 0.8) {
     this.play('shoot', volume);
   }
 
-  // 扑克牌飞出与洗牌
+  // 符箓飞出与理符
   playCard(volume: number = 0.75) {
     this.play('card', volume);
   }
@@ -310,32 +310,32 @@ export class SoundMgr {
     this.play('click', volume);
   }
 
-  // 子弹命中肉体或护甲
+  // 飞符命中肉体或护甲
   playHit(volume: number = 0.7) {
     this.play('hit', volume);
   }
 
-  // 方块重型爆破
+  // 灵印重型爆破
   playExplosion(volume: number = 0.9) {
     this.play('explosion', volume);
   }
 
-  // 梅花跳弹火星呼啸
+  // 风印跳弹火星呼啸
   playBounce(volume: number = 0.8) {
     this.play('bounce', volume);
   }
 
-  // 翻滚闪避沙尘
+  // 闪避闪避沙尘
   playRoll(volume: number = 0.75) {
     this.play('roll', volume);
   }
 
-  // 赏金银元掉落
+  // 灵息银元掉落
   playCoin(volume: number = 0.85) {
     this.play('coin', volume);
   }
 
-  // 枪斗时刻大招激活
+  // 巡夜灯阵大招激活
   playKata(volume: number = 0.95) {
     this.play('kata', volume);
   }
@@ -345,7 +345,7 @@ export class SoundMgr {
     this.play('win', volume);
   }
 
-  // 猎人受击扣血
+  // 巡夜师受击扣血
   playHurt(volume: number = 0.8) {
     this.play('hurt', volume);
   }
