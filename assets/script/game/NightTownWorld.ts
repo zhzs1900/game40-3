@@ -562,7 +562,7 @@ export class NightTownWorld extends Component {
 
   public isPaused: boolean = false;
 
-  // 每帧驱动环境动态（风滚草闪避前进、油灯摇曳与光晕闪烁、百叶门晃动）
+  // 每帧驱动环境动态（残符飘移、灯笼摇曳与灵火呼吸）
   update(dt: number) {
     if (this.isPaused) return;
     this.worldTimer += dt;
@@ -570,14 +570,13 @@ export class NightTownWorld extends Component {
     // 1. 驱动风滚草在地面闪避蹦跳
     if (this.tumbleNode && this.tumbleNode.isValid) {
       const curX = this.tumbleNode.position.x + dt * 68;
-      // 模拟地面反弹起伏曲线
-      const bounceY = -180 + Math.abs(Math.sin(this.worldTimer * 3.5)) * 22;
-      this.tumbleNode.setPosition(curX, bounceY, 0);
-      this.tumbleNode.angle -= dt * 240; // 滚动自转
+      const driftY = -80 + Math.sin(this.worldTimer * 2.4) * 18;
+      this.tumbleNode.setPosition(curX, driftY, 0);
+      this.tumbleNode.angle = Math.sin(this.worldTimer * 2.1) * 12;
 
       // 跑出屏幕右侧后循环回到左侧
       if (curX > 380) {
-        this.tumbleNode.setPosition(-380, -180, 0);
+        this.tumbleNode.setPosition(-380, -80, 0);
       }
     }
 
@@ -592,14 +591,10 @@ export class NightTownWorld extends Component {
         g.clear();
         g.strokeColor = new Color(185, 135, 45);
         g.lineWidth = 1.5;
-        g.rect(-6, -10, 12, 18);
-        g.stroke();
-        g.fillColor = new Color(255, 220, 70);
-        g.ellipse(0, -2, 3, 5);
-        g.fill();
-        g.fillColor = new Color(255, 210, 60, alpha);
-        g.circle(0, -2, haloR);
-        g.fill();
+        g.roundRect(-14,-18,28,36,7); g.stroke();
+        g.fillColor = new Color(121,43,43,220); g.roundRect(-12,-16,24,32,6); g.fill();
+        g.fillColor = new Color(255,220,90); g.ellipse(0,-1,5,9); g.fill();
+        g.fillColor = new Color(255,210,70,alpha); g.circle(0,-1,haloR); g.fill();
       }
     }
 
