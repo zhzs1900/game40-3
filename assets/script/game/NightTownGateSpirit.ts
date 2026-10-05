@@ -1,5 +1,5 @@
-// 关底 Boss 与“黑牌赌王”系统
-// 具备专属悬浮牌面、阶段变身、攻击预摇、破牌打断与虚弱硬直机制
+// 关底镇门灵与符封破阵系统
+// 具备专属悬浮符阵、面具开合、阶段破封、打断与虚弱硬直机制
 
 import { _decorator, Color, Component, Graphics, Node, tween, Tween, Vec3 } from 'cc';
 import { ComboType, SuitType } from './NightTownData';
@@ -9,7 +9,7 @@ const { ccclass } = _decorator;
 
 @ccclass('NightTownGateSpirit')
 export class NightTownGateSpirit extends Component {
-  public bossName: string = '黑牌赌王·卡特赖特';
+  public bossName: string = '镇门灵·残面';
   public hp: number = 2000;
   public maxHp: number = 2000;
   public phase: number = 1;       // 1: 普通 2: 牌型阶段 3: 狂暴末路
@@ -316,61 +316,39 @@ export class NightTownGateSpirit extends Component {
 
   // 阶段转换动画
   private triggerPhaseShift() {
-    // 震退周围并召唤爪牙
-    if (this.onSummonMinions) {
-      this.onSummonMinions(this.node.position);
-    }
-
-    // 符封崩裂：木石外壳震开、面具开合
-    tween(this.bodyRoot)
-      .to(0.1, { scale: new Vec3(1.22, 1.08, 1), angle: 4 })
-      .to(0.2, { scale: new Vec3(1.0, 1.0, 1), angle: 0 })
-      .start();
+    if(this.onSummonMinions)this.onSummonMinions(this.node.position);
+    // 面具开合、锁链抽动、符封炸裂三层阶段切换
+    tween(this.headNode).to(.08,{scale:new Vec3(1.18,.82,1),angle:-8}).to(.12,{scale:new Vec3(.92,1.16,1),angle:7}).to(.16,{scale:new Vec3(1,1,1),angle:0}).start();
+    tween(this.armNode).to(.1,{angle:this.armNode.angle+28}).to(.14,{angle:this.armNode.angle-16}).to(.14,{angle:this.armNode.angle}).start();
+    tween(this.bodyRoot).to(.08,{scale:new Vec3(1.24,.86,1),angle:5}).to(.12,{scale:new Vec3(.92,1.18,1),angle:-4}).to(.18,{scale:new Vec3(1,1,1),angle:0}).start();
+    const seal=new Node('PhaseSealFracture');seal.setPosition(0,18,0);this.node.addChild(seal);
+    const g=seal.addComponent(Graphics);
+    g.strokeColor=new Color(231,188,97,235);g.lineWidth=2.5;
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;g.moveTo(Math.cos(a)*12,Math.sin(a)*12);g.lineTo(Math.cos(a+.08)*30,Math.sin(a+.08)*30);g.lineTo(Math.cos(a-.05)*46,Math.sin(a-.05)*46);}g.stroke();
+    g.strokeColor=new Color(177,49,45,220);g.lineWidth=2;g.circle(0,0,21);g.stroke();
+    for(let i=0;i<5;i++){const shard=new Node('MaskShard');shard.setPosition(0,18,0);this.node.addChild(shard);const sg=shard.addComponent(Graphics);
+      sg.fillColor=i%2?new Color(92,79,70):new Color(211,193,151);sg.moveTo(-5,-4);sg.lineTo(5,-2);sg.lineTo(2,6);sg.lineTo(-6,3);sg.close();sg.fill();
+      const a=i*Math.PI*2/5+.2; tween(shard).by(.4,{position:new Vec3(Math.cos(a)*42,Math.sin(a)*42,0),angle:180+i*37,scale:new Vec3(.4,.4,1)}).call(()=>shard.destroy()).start();}
+    tween(seal).to(.28,{scale:new Vec3(1.6,1.6,1),angle:18}).call(()=>seal.destroy()).start();
   }
 
   // 破牌成功：大招被打断，Boss 陷入虚弱眩晕硬直
   private breakChargeHand() {
-    this.isCharging = false;
-    this.isStunned = true;
-    for (const child of [...this.cardOrbitRoot.children]) child.destroy();
-    this.cardOrbitRoot.removeAllChildren();
-    Tween.stopAllByTarget(this.bodyRoot);
-    this.bodyRoot.setScale(1, 1, 1);
-
-    // 产生符箓爆碎纸屑效果
-    const shatterNode = new Node('BrokenSeal');
-    this.node.addChild(shatterNode);
-    shatterNode.setPosition(0, 70, 0);
-    const sg = shatterNode.addComponent(Graphics);
-    sg.fillColor = new Color(255, 230, 150);
-    for (let i = 0; i < 12; i++) {
-      sg.rect((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 30, 4, 3);
-    }
-    sg.fill();
-
-    tween(shatterNode)
-      .by(0.4, { scale: new Vec3(2, 2, 1), position: new Vec3(0, -30, 0) })
-      .call(() => shatterNode.destroy())
-      .start();
-
-    // 头顶冒出金星眩晕
-    const stunStar = new Node('OpenMaskSeal');
-    this.node.addChild(stunStar);
-    stunStar.setPosition(0, 60, 0);
-    const starG = stunStar.addComponent(Graphics);
-    TalismanRenderer.drawStarBadge(starG, 0, 0, 12, new Color(255, 220, 50));
-
-    tween(stunStar)
-      .by(1.8, { angle: 720 })
-      .call(() => stunStar.destroy())
-      .start();
-
-    // 破牌提供1.6秒反击窗口。
-    this.stunTimer = 1.6;
-
-    if (this.onHandBroken) {
-      this.onHandBroken();
-    }
+    this.isCharging=false;this.isStunned=true;
+    for(const child of [...this.cardOrbitRoot.children])child.destroy();
+    this.cardOrbitRoot.removeAllChildren();Tween.stopAllByTarget(this.bodyRoot);this.bodyRoot.setScale(1,1,1);
+    const burst=new Node('BrokenSealMandala');burst.setPosition(0,70,0);this.node.addChild(burst);
+    const g=burst.addComponent(Graphics);
+    g.strokeColor=new Color(247,205,110,235);g.lineWidth=2.2;
+    for(let i=0;i<10;i++){const a=i*Math.PI/5;g.moveTo(Math.cos(a)*13,Math.sin(a)*13);g.bezierCurveTo(Math.cos(a+.2)*25,Math.sin(a+.2)*25,Math.cos(a-.1)*35,Math.sin(a-.1)*35,Math.cos(a)*44,Math.sin(a)*44);}g.stroke();
+    g.strokeColor=new Color(184,50,46,230);g.lineWidth=2;g.circle(0,0,18);g.stroke();
+    for(let i=0;i<12;i++){const n=new Node('SealPaperAsh');n.setPosition(0,70,0);this.node.addChild(n);const pg=n.addComponent(Graphics);
+      pg.fillColor=new Color(225,210,168,220);pg.moveTo(-3,-6);pg.lineTo(4,-4);pg.lineTo(2,6);pg.lineTo(-5,3);pg.close();pg.fill();pg.strokeColor=new Color(169,49,45);pg.lineWidth=.9;pg.moveTo(-1,3);pg.lineTo(2,-3);pg.stroke();
+      const a=i*Math.PI*2/12+(Math.random()-.5)*.25,dist=30+Math.random()*30;
+      tween(n).by(.46,{position:new Vec3(Math.cos(a)*dist,Math.sin(a)*dist-15,0),angle:(Math.random()-.5)*360,scale:new Vec3(.5,.5,1)}).call(()=>n.destroy()).start();}
+    tween(burst).to(.32,{scale:new Vec3(1.7,1.7,1),angle:28}).call(()=>burst.destroy()).start();
+    tween(this.headNode).to(.1,{position:new Vec3(0,42,0),angle:-12}).to(.12,{position:new Vec3(0,30,0),angle:10}).to(.18,{position:new Vec3(0,36,0),angle:0}).start();
+    this.stunTimer=1.6;if(this.onHandBroken)this.onHandBroken();
   }
 
   // 蓄力超时未被打断，释放恐怖牌型大招
@@ -388,23 +366,25 @@ export class NightTownGateSpirit extends Component {
 
   // 壮烈死亡倒地
   private playDeath() {
-    this.isDead = true;
-    for (const child of [...this.cardOrbitRoot.children]) child.destroy();
-    this.cardOrbitRoot.removeAllChildren();
-    this.bossHpBarNode.active = false;
-    this.legLeftNode.active = false;
-    this.legRightNode.active = false;
-
-    // 礼帽跌落
-    tween(this.headNode)
-      .by(0.4, { position: new Vec3(-30, 20, 0), angle: -120 })
-      .by(0.3, { position: new Vec3(-20, -50, 0) })
-      .start();
-
-    // 躯干跪地
-    tween(this.bodyRoot)
-      .to(0.5, { position: new Vec3(0, -18, 0), angle: 90 })
-      .start();
+    this.isDead=true;
+    for(const child of [...this.cardOrbitRoot.children])child.destroy();
+    this.cardOrbitRoot.removeAllChildren();this.bossHpBarNode.active=false;this.legLeftNode.active=false;this.legRightNode.active=false;
+    if(this.shadowNode)this.shadowNode.active=false;
+    const parent=this.node.parent;
+    if(parent){
+      const gateSeal=new Node('GateSpiritCollapseSeal');gateSeal.setPosition(this.node.position);parent.addChild(gateSeal);
+      const g=gateSeal.addComponent(Graphics);g.strokeColor=new Color(216,175,88,210);g.lineWidth=3;
+      for(let i=0;i<12;i++){const a=i*Math.PI/6;g.moveTo(Math.cos(a)*20,Math.sin(a)*20);g.lineTo(Math.cos(a)*55,Math.sin(a)*55);}g.stroke();
+      g.strokeColor=new Color(130,65,142,150);g.lineWidth=2;g.circle(0,0,34);g.stroke();
+      tween(gateSeal).to(.7,{scale:new Vec3(1.8,1.8,1),angle:35}).call(()=>gateSeal.destroy()).start();
+      for(let i=0;i<10;i++){const n=new Node('GateStoneShard');n.setPosition(this.node.position.x,this.node.position.y+20,0);parent.addChild(n);
+        const sg=n.addComponent(Graphics);sg.fillColor=i%3===0?new Color(198,181,143):new Color(77,68,66);
+        sg.moveTo(-5,-4);sg.lineTo(6,-2);sg.lineTo(3,7);sg.lineTo(-7,3);sg.close();sg.fill();sg.strokeColor=new Color(47,42,45);sg.lineWidth=1;sg.moveTo(-3,1);sg.lineTo(3,-1);sg.stroke();
+        const a=i*Math.PI*2/10+(Math.random()-.5)*.35,dist=38+Math.random()*45;tween(n).by(.55,{position:new Vec3(Math.cos(a)*dist,Math.sin(a)*dist+25,0),angle:(Math.random()-.5)*420,scale:new Vec3(.45,.45,1)}).call(()=>n.destroy()).start();}
+    }
+    tween(this.headNode).to(.18,{scale:new Vec3(1.18,.8,1),position:new Vec3(0,44,0)}).to(.34,{position:new Vec3(-30,-12,0),angle:-125,scale:new Vec3(.9,.9,1)}).start();
+    tween(this.armNode).to(.2,{angle:55,position:new Vec3(16,7,0)}).to(.35,{angle:120,position:new Vec3(28,-18,0)}).start();
+    tween(this.bodyRoot).to(.18,{scale:new Vec3(1.12,.86,1),position:new Vec3(0,-7,0)}).to(.5,{position:new Vec3(0,-31,0),angle:72,scale:new Vec3(.84,1.08,1)}).start();
   }
 
   // 每帧驱动 Boss 行为
