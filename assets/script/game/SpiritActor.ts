@@ -192,7 +192,7 @@ export class SpiritActor extends Component {
     this.drawEnemyWeapon(this.weaponNode);
   }
 
-  // 绘制敌人双腿（巡夜师裤、皮套裤、护膝、加固马靴与马刺）
+  // 绘制敌人双腿（五类邪祟各自不同的下肢、纸片、兽足与夜行结构）
   private drawEnemyLeg(node: Node, isLeft: boolean) {
     const g = node.getComponent(Graphics) || node.addComponent(Graphics); g.clear();
     const sx = isLeft ? -1 : 1;
