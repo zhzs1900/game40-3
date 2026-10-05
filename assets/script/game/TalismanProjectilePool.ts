@@ -72,182 +72,60 @@ export class TalismanProjectilePool extends Component {
 
   // 绘制各花色的专属发光符印与写实小导弹
   private drawBulletShape(node: Node, suit: SuitType, isHero: boolean, combo: ComboType, blastR: number = 0) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    if (!isHero) {
-      // 敌方飞符：深红暗哑飞符带赤红外焰
-      g.fillColor = new Color(245, 60, 40);
-      g.ellipse(0, 0, 8, 4);
-      g.fill();
-      g.fillColor = new Color(255, 220, 110);
-      g.circle(3, 0, 2);
-      g.fill();
+    const g=node.addComponent(Graphics); g.clear();
+    if(!isHero){
+      g.fillColor=new Color(54,27,63,210); g.ellipse(0,0,10,6); g.fill();
+      g.fillColor=new Color(147,73,152,150); g.circle(3,0,4); g.fill();
+      g.strokeColor=new Color(202,103,110,180); g.lineWidth=1.5;
+      g.moveTo(-12,4);g.bezierCurveTo(-5,10,2,-8,11,3);g.stroke();
       return;
     }
-
-    // 重炮或灵印爆炸弹/葫芦：呈现精密小导弹造型（尾翼、弹体、弹尖铜锥、发光符文）
-    if (blastR > 0 || combo === 'fullhouse') {
-      // 铸铁深黑弹体
-      g.fillColor = new Color(45, 48, 55);
-      g.roundRect(-10, -3.5, 18, 7, 1.5);
-      g.fill();
-
-      // 黄铜尖头战斗部
-      g.fillColor = new Color(235, 165, 45);
-      g.moveTo(8, -3.5);
-      g.lineTo(16, 0);
-      g.lineTo(8, 3.5);
-      g.close();
-      g.fill();
-
-      // 尾部三片稳定尾翼
-      g.fillColor = new Color(75, 80, 90);
-      g.moveTo(-10, 3.5);
-      g.lineTo(-14, 7);
-      g.lineTo(-6, 3.5);
-      g.close();
-      g.fill();
-      g.moveTo(-10, -3.5);
-      g.lineTo(-14, -7);
-      g.lineTo(-6, -3.5);
-      g.close();
-      g.fill();
-
-      // 弹身爆破危险金纹
-      g.fillColor = new Color(255, 210, 50);
-      g.rect(-2, -3.5, 4, 7);
-      g.fill();
-      return;
-    }
-
-    // 顺子高速连发弹：极速细长穿云金梭
-    if (combo === 'straight') {
-      g.fillColor = new Color(255, 215, 60, 90);
-      g.roundRect(-22, -3, 36, 6, 3);
-      g.fill();
-      g.fillColor = new Color(255, 255, 240);
-      g.ellipse(2, 0, 12, 2.2);
-      g.fill();
-      return;
-    }
-
-    // 根据不同牌型放大符印尺寸
-    const sz = combo === 'flush' ? 1.4 : combo === 'trips' ? 1.2 : 1.0;
-
-    // 花色光晕
-    let glowCol = new Color(255, 220, 100);
-    switch (suit) {
-      case 'spade': glowCol = new Color(145, 90, 255); break;  // 雷印幽蓝紫光
-      case 'heart': glowCol = new Color(255, 60, 95); break;   // 火印灼热绯红
-      case 'club': glowCol = new Color(40, 230, 140); break;   // 风印翡翠青芒
-      case 'diamond': glowCol = new Color(255, 160, 35); break; // 灵印耀金爆裂
-    }
-
-    // 拖尾光晕
-    g.fillColor = new Color(glowCol.r, glowCol.g, glowCol.b, 90);
-    g.roundRect(-16 * sz, -5 * sz, 26 * sz, 10 * sz, 4 * sz);
-    g.fill();
-
-    // 弹芯黄铜流光
-    g.fillColor = new Color(255, 245, 205);
-    g.ellipse(2 * sz, 0, 9 * sz, 4 * sz);
-    g.fill();
-
-    // 弹尖白炽亮斑
-    g.fillColor = new Color(255, 255, 255);
-    g.circle(6 * sz, 0, 2.5 * sz);
-    g.fill();
+    const col = suit==='spade' ? new Color(132,174,238) :
+      suit==='heart' ? new Color(244,99,64) :
+      suit==='club' ? new Color(116,205,174) : new Color(229,197,111);
+    const long = combo==='straight' ? 30 : combo==='fullhouse' || blastR>0 ? 24 : 20;
+    const tall = combo==='flush' || combo==='quads' ? 12 : 9;
+    g.fillColor=new Color(244,226,178,245);
+    g.moveTo(-long/2,-tall/2); g.lineTo(long/2-3,-tall/2+1); g.lineTo(long/2,tall/2-1); g.lineTo(-long/2,tall/2); g.close(); g.fill();
+    g.strokeColor=new Color(166,48,43); g.lineWidth=1.6;
+    g.moveTo(-long/2+3,tall/2-2); g.bezierCurveTo(-3, tall/2+3, 3, -tall/2-2, long/2-4, 1); g.stroke();
+    g.strokeColor=col; g.lineWidth=2;
+    if(suit==='spade'){ g.moveTo(-3,-3);g.lineTo(0,4);g.lineTo(3,-2);g.lineTo(7,4); }
+    else if(suit==='heart'){ g.moveTo(-5,0);g.bezierCurveTo(-1,6,4,5,7,0);g.bezierCurveTo(2,-5,-1,-5,-5,0); }
+    else if(suit==='club'){ g.moveTo(-5,3);g.bezierCurveTo(0,-5,4,6,8,-2); }
+    else { g.moveTo(-4,0);g.lineTo(2,5);g.lineTo(8,0);g.lineTo(2,-5);g.close(); }
+    g.stroke();
+    g.fillColor=new Color(col.r,col.g,col.b,80);g.roundRect(-long/2-8,-tall/2-3,long+16,tall+6,5);g.fill();
   }
 
   // 符灯火焰、朱砂黑白烟雾与弹壳飞射
   playMuzzleFlash(pos: Vec3, dir: Vec3) {
-    const fNode = new Node('MuzzleFx');
-    fNode.setPosition(pos);
-    const rad = Math.atan2(dir.y, dir.x);
-    fNode.angle = (rad * 180) / Math.PI;
-    this.fxRoot.addChild(fNode);
-
-    const g = fNode.addComponent(Graphics);
-
-    // 喇叭形金色火焰
-    g.fillColor = new Color(255, 210, 60);
-    g.moveTo(0, 0);
-    g.lineTo(24, 12);
-    g.lineTo(36, 0);
-    g.lineTo(24, -12);
-    g.close();
-    g.fill();
-
-    // 中心白热火核
-    g.fillColor = new Color(255, 255, 240);
-    g.moveTo(0, 0);
-    g.lineTo(14, 6);
-    g.lineTo(20, 0);
-    g.lineTo(14, -6);
-    g.close();
-    g.fill();
-
-    // 极快闪现后销毁
-    this.scheduleOnce(() => {
-      fNode.destroy();
-    }, 0.06);
-
-    // 产生朱砂烟气团
-    for (let i = 0; i < 3; i++) {
-      this.spawnSmokePuff(new Vec3(pos.x + dir.x * 20, pos.y + dir.y * 20, 0));
-    }
-
-    // 向斜后方抛出旋转金黄弹壳
-    this.spawnCasing(pos, new Vec3(-dir.x + (Math.random() - 0.5), -dir.y + (Math.random() + 0.5), 0));
+    const fNode=new Node('BrushRuneRelease');fNode.setPosition(pos);
+    fNode.angle=Math.atan2(dir.y,dir.x)*180/Math.PI;this.fxRoot.addChild(fNode);
+    const g=fNode.addComponent(Graphics);
+    g.strokeColor=new Color(244,211,127,240);g.lineWidth=3;
+    g.moveTo(0,0);g.bezierCurveTo(9,13,18,-10,30,2);g.moveTo(4,-7);g.bezierCurveTo(13,1,20,8,31,-4);g.stroke();
+    g.strokeColor=new Color(185,53,47,230);g.lineWidth=2;g.moveTo(8,5);g.lineTo(15,-5);g.lineTo(22,5);g.stroke();
+    tween(fNode).to(0.12,{scale:new Vec3(1.45,1.45,1)}).call(()=>fNode.destroy()).start();
+    for(let i=0;i<4;i++) this.spawnSmokePuff(new Vec3(pos.x+dir.x*(10+i*4),pos.y+dir.y*(10+i*4),0));
   }
 
   // 抛出黄铜弹壳
   private spawnCasing(pos: Vec3, ejectDir: Vec3) {
-    const cNode = new Node('Casing');
-    cNode.setPosition(pos);
-    this.fxRoot.addChild(cNode);
-
-    const g = cNode.addComponent(Graphics);
-    g.fillColor = new Color(220, 175, 60);
-    g.roundRect(-4, -1.5, 8, 3, 1);
-    g.fill();
-
-    const speed = 120 + Math.random() * 80;
-    this.particles.push({
-      node: cNode,
-      vx: ejectDir.x * speed,
-      vy: ejectDir.y * speed,
-      rotSpd: (Math.random() - 0.5) * 720,
-      life: 0,
-      maxLife: 0.45,
-      color: new Color(220, 175, 60),
-      size: 4
-    });
+    const cNode=new Node('PaperAsh');cNode.setPosition(pos);this.fxRoot.addChild(cNode);
+    const g=cNode.addComponent(Graphics);g.fillColor=new Color(201,185,151,180);
+    g.moveTo(-3,-2);g.lineTo(4,-1);g.lineTo(2,3);g.lineTo(-4,2);g.close();g.fill();
+    const speed=55+Math.random()*55;
+    this.particles.push({node:cNode,vx:ejectDir.x*speed,vy:20+Math.abs(ejectDir.y)*speed,rotSpd:(Math.random()-.5)*300,life:0,maxLife:.6,color:new Color(201,185,151),size:4});
   }
 
   // 腾起的淡灰朱砂烟雾
   private spawnSmokePuff(pos: Vec3) {
-    const sNode = new Node('Smoke');
-    sNode.setPosition(pos);
-    this.fxRoot.addChild(sNode);
-
-    const g = sNode.addComponent(Graphics);
-    const alpha = 140;
-    g.fillColor = new Color(180, 170, 160, alpha);
-    g.circle(0, 0, 7);
-    g.fill();
-
-    this.particles.push({
-      node: sNode,
-      vx: (Math.random() - 0.5) * 30,
-      vy: 20 + Math.random() * 30,
-      rotSpd: (Math.random() - 0.5) * 60,
-      life: 0,
-      maxLife: 0.5,
-      color: new Color(180, 170, 160),
-      size: 7
-    });
+    const sNode=new Node('SpiritEmber');sNode.setPosition(pos);this.fxRoot.addChild(sNode);
+    const g=sNode.addComponent(Graphics);
+    const warm=Math.random()>.5;g.fillColor=warm?new Color(246,177,75,135):new Color(115,167,185,110);
+    g.moveTo(0,6);g.bezierCurveTo(7,1,4,-6,0,-8);g.bezierCurveTo(-4,-4,-5,2,0,6);g.fill();
+    this.particles.push({node:sNode,vx:(Math.random()-.5)*24,vy:28+Math.random()*28,rotSpd:(Math.random()-.5)*80,life:0,maxLife:.55,color:new Color(220,176,103),size:6});
   }
 
   // 产生跳弹火花（风印或硬物反弹）
@@ -309,7 +187,7 @@ export class TalismanProjectilePool extends Component {
   private trailTimer: number = 0;
 
   // 命中金属火星飞溅
-  playHitSparks(pos: Vec3, dir: Vec3, sparkCol: Color = new Color(255, 220, 80)) {
+  playHitSparks(pos: Vec3, dir: Vec3, sparkCol: Color = new Color(239, 197, 111)) {
     const oppRad = Math.atan2(-dir.y, -dir.x);
     for (let i = 0; i < 5; i++) {
       const spNode = new Node('HitSpark');
@@ -463,7 +341,7 @@ export class TalismanProjectilePool extends Component {
 
   // 灵印或葫芦重型爆炸（真实古镇夜巡朱砂爆轰：火球白核、黑烟破片与泥石飞溅，告别突兀单线圆圈）
   playExplosion(pos: Vec3, radius: number = 80) {
-    const expNode = new Node('Explosion');
+    const expNode = new Node('SealBurst');
     expNode.setPosition(pos);
     this.fxRoot.addChild(expNode);
 
@@ -643,77 +521,11 @@ export class TalismanProjectilePool extends Component {
 
   // 生成导弹飞行的炽热喷射尾焰、浓烟扩散与火星
   private spawnBulletTrailPuff(pos: Vec3, suit: SuitType, dir: Vec3) {
-    // 1. 炽热锥形喷射尾焰（内芯白热、外焰橙红）
-    const flameNode = new Node('TrailFlame');
-    flameNode.setPosition(pos);
-    this.fxRoot.addChild(flameNode);
-
-    const fg = flameNode.addComponent(Graphics);
-    const oppRad = Math.atan2(-dir.y, -dir.x);
-    flameNode.angle = (oppRad * 180) / Math.PI;
-
-    // 外焰
-    fg.fillColor = suit === 'diamond' ? new Color(255, 100, 20, 230) : new Color(255, 180, 40, 220);
-    fg.moveTo(0, 0);
-    fg.lineTo(16, 5);
-    fg.lineTo(24, 0);
-    fg.lineTo(16, -5);
-    fg.close();
-    fg.fill();
-
-    // 内芯白热
-    fg.fillColor = new Color(255, 255, 220);
-    fg.moveTo(0, 0);
-    fg.lineTo(8, 2.5);
-    fg.lineTo(12, 0);
-    fg.lineTo(8, -2.5);
-    fg.close();
-    fg.fill();
-
-    // 0.08秒极速消散
-    tween(flameNode)
-      .to(0.08, { scale: new Vec3(0.3, 0.3, 1) })
-      .call(() => {
-        if (flameNode.isValid) flameNode.destroy();
-      })
-      .start();
-
-    // 2. 膨胀消散的灰白朱砂浓烟气团（通过 tween 自身缩放并销毁，不混入 particles）
-    const smokeNode = new Node('TrailSmoke');
-    smokeNode.setPosition(pos.x - dir.x * 6 + (Math.random() - 0.5) * 6, pos.y - dir.y * 6 + (Math.random() - 0.5) * 6, 0);
-    this.fxRoot.addChild(smokeNode);
-
-    const sg = smokeNode.addComponent(Graphics);
-    sg.fillColor = new Color(210, 205, 200, 140);
-    sg.circle(0, 0, 4);
-    sg.fill();
-
-    tween(smokeNode)
-      .to(0.28, { scale: new Vec3(2.5, 2.5, 1) })
-      .call(() => {
-        if (smokeNode.isValid) smokeNode.destroy();
-      })
-      .start();
-
-    // 3. 散落微星火花（新建一个独立火花节点交给 particles 管理）
-    const spkNode = new Node('TrailSpark');
-    spkNode.setPosition(pos);
-    this.fxRoot.addChild(spkNode);
-    const spg = spkNode.addComponent(Graphics);
-    spg.fillColor = new Color(255, 180, 40);
-    spg.circle(0, 0, 2);
-    spg.fill();
-
-    this.particles.push({
-      node: spkNode,
-      vx: -dir.x * 40 + (Math.random() - 0.5) * 30,
-      vy: -dir.y * 40 + (Math.random() - 0.5) * 30,
-      rotSpd: 0,
-      life: 0,
-      maxLife: 0.22,
-      color: new Color(255, 180, 40),
-      size: 2
-    });
+    const n=new Node('InkTrail');n.setPosition(pos);this.fxRoot.addChild(n);
+    const g=n.addComponent(Graphics);
+    const c=suit==='spade'?new Color(112,157,221,120):suit==='heart'?new Color(226,83,60,120):suit==='club'?new Color(91,184,151,120):new Color(224,190,102,120);
+    g.strokeColor=c;g.lineWidth=2;g.moveTo(0,0);g.bezierCurveTo(-dir.x*8+2,-dir.y*8+3,-dir.x*14-2,-dir.y*14-2,-dir.x*20,-dir.y*20);g.stroke();
+    tween(n).to(.2,{scale:new Vec3(.35,.35,1)}).call(()=>n.destroy()).start();
   }
 
   // 获得当前活跃飞符列表以供碰撞检测
