@@ -32,6 +32,8 @@ export class NightTownWorld extends Component {
   private steamNode?: Node;
   private curLevel: number = 1;
   private worldTimer: number = 0;
+  private windCharmNodes: Node[] = [];
+  private spiritMistNodes: Node[] = [];
 
   // 箱子炸裂回调
   public onBoxBreak?: (pos: Vec3, isExplode: boolean) => void;
@@ -60,6 +62,8 @@ export class NightTownWorld extends Component {
     this.lanternNode = undefined;
     this.doorsNode = undefined;
     this.steamNode = undefined;
+    this.windCharmNodes = [];
+    this.spiritMistNodes = [];
 
     // 1. 绘制底层地貌与质感纹理
     this.drawTerrainBase(level);
@@ -108,53 +112,93 @@ export class NightTownWorld extends Component {
 
   // 绘制各个关卡的专属特色矢量场景
   private drawSceneTheme(level: number) {
-    const dNode=new Node('NightTownTheme');this.decoRoot.addChild(dNode);
-    const g=dNode.addComponent(Graphics);
-    // roof silhouettes and eaves frame the combat lane
-    g.fillColor=new Color(13,22,39,225);
-    g.moveTo(-360,430);g.lineTo(-285,500);g.lineTo(-205,445);g.lineTo(-155,490);g.lineTo(-115,455);g.lineTo(-115,640);g.lineTo(-360,640);g.close();g.fill();
-    g.moveTo(360,390);g.lineTo(290,475);g.lineTo(225,440);g.lineTo(165,500);g.lineTo(115,455);g.lineTo(115,640);g.lineTo(360,640);g.close();g.fill();
-    g.strokeColor=new Color(91,65,61,190);g.lineWidth=5;g.moveTo(-345,420);g.lineTo(-130,420);g.moveTo(130,420);g.lineTo(345,420);g.stroke();
-    // each level adds a recognizable old-town landmark
+    const dNode=new Node('NightTownTheme');this.decoRoot.addChild(dNode);const g=dNode.addComponent(Graphics);
+
+    // 两侧古镇建筑形成不规则层叠剪影：瓦脊、飞檐、木柱、窗棂和悬挂符条
+    const drawHouse=(sx:number, baseY:number, mirror:number)=>{
+      g.fillColor=new Color(12,21,38,238);
+      g.moveTo(sx,baseY);g.lineTo(sx+mirror*42,baseY+18);g.lineTo(sx+mirror*77,baseY+52);g.lineTo(sx+mirror*116,baseY+30);
+      g.lineTo(sx+mirror*154,baseY+74);g.lineTo(sx+mirror*196,baseY+42);g.lineTo(sx+mirror*220,baseY+18);g.lineTo(sx+mirror*220,640);g.lineTo(sx,640);g.close();g.fill();
+      g.strokeColor=new Color(88,67,66,210);g.lineWidth=5;
+      g.moveTo(sx+mirror*14,baseY+7);g.bezierCurveTo(sx+mirror*64,baseY+38,sx+mirror*130,baseY+13,sx+mirror*207,baseY+27);g.stroke();
+      g.strokeColor=new Color(119,92,75,155);g.lineWidth=2;
+      for(let i=0;i<4;i++){const x=sx+mirror*(38+i*48);g.moveTo(x,baseY+25);g.lineTo(x,baseY+145);}
+      g.stroke();
+      // 窗棂和暖灯，不用单一方块，采用弧顶窗+分格
+      for(let i=0;i<3;i++){
+        const x=sx+mirror*(55+i*58),y=baseY+96+(i%2)*18;
+        g.fillColor=new Color(242,176,77,35);g.moveTo(x-mirror*14,y-17);g.lineTo(x+mirror*14,y-17);g.bezierCurveTo(x+mirror*16,y+8,x-mirror*16,y+8,x-mirror*14,y-17);g.fill();
+        g.strokeColor=new Color(180,137,73,130);g.lineWidth=1;g.moveTo(x,y-15);g.lineTo(x,y+5);g.moveTo(x-mirror*10,y-3);g.lineTo(x+mirror*10,y-3);g.stroke();
+      }
+    };
+    drawHouse(-360,402,1);drawHouse(360,382,-1);
+
+    // 中央关卡地标
     if(level===1||level===6){
-      g.fillColor=new Color(70,55,56);g.roundRect(-72,255,144,105,7);g.fill();
-      g.strokeColor=new Color(177,51,45);g.lineWidth=2;g.roundRect(-65,262,130,91,5);g.stroke();
-      for(let x=-45;x<=45;x+=30){g.moveTo(x,270);g.lineTo(x,345);}g.stroke();
-    } else if(level===2||level===7){
-      g.strokeColor=new Color(205,167,88);g.lineWidth=3;g.moveTo(-170,340);g.bezierCurveTo(-60,395,62,300,175,350);g.stroke();
-      for(let x=-150;x<=150;x+=60){g.fillColor=new Color(137,45,49);g.ellipse(x,335+(x%120===0?18:0),15,20);g.fill();}
-    } else if(level===3){
-      g.fillColor=new Color(23,30,44);g.circle(-190,300,62);g.fill();g.strokeColor=new Color(96,112,135);g.lineWidth=5;g.circle(-190,300,54);g.stroke();
-      g.strokeColor=new Color(155,49,47);g.lineWidth=2;g.moveTo(-225,335);g.lineTo(-155,265);g.moveTo(-155,335);g.lineTo(-225,265);g.stroke();
-    } else if(level===4){
-      g.fillColor=new Color(73,66,76);g.moveTo(-300,250);g.lineTo(300,250);g.lineTo(235,330);g.lineTo(-235,330);g.close();g.fill();
-      g.strokeColor=new Color(200,161,84);g.lineWidth=2;for(let x=-220;x<=220;x+=55){g.moveTo(x,260);g.lineTo(x+18,320);}g.stroke();
-    } else if(level===5){
-      g.fillColor=new Color(76,52,48);g.roundRect(-150,300,300,115,7);g.fill();g.strokeColor=new Color(205,165,87);g.lineWidth=2;g.roundRect(-140,310,280,95,5);g.stroke();
-      g.fillColor=new Color(36,31,41);g.moveTo(-185,410);g.lineTo(0,500);g.lineTo(185,410);g.close();g.fill();
-    } else {
-      g.fillColor=new Color(54,47,60);g.roundRect(-210,280,420,160,9);g.fill();
-      g.fillColor=new Color(28,25,37);g.moveTo(-250,440);g.lineTo(0,555);g.lineTo(250,440);g.close();g.fill();
-      g.strokeColor=new Color(178,50,46);g.lineWidth=3;g.moveTo(-42,405);g.lineTo(0,455);g.lineTo(42,405);g.stroke();
+      g.fillColor=new Color(68,54,56);g.moveTo(-78,258);g.lineTo(-66,244);g.lineTo(66,244);g.lineTo(82,258);g.lineTo(70,360);g.lineTo(-70,360);g.close();g.fill();
+      g.strokeColor=new Color(183,52,47);g.lineWidth=2.2;g.moveTo(-62,273);g.bezierCurveTo(-25,258,25,258,62,273);g.lineTo(57,347);g.lineTo(-57,347);g.close();g.stroke();
+      g.strokeColor=new Color(205,167,90);g.lineWidth=1.2;for(let x=-42;x<=42;x+=28){g.moveTo(x,270);g.lineTo(x,345);}g.stroke();
+    }else if(level===2||level===7){
+      g.strokeColor=new Color(210,169,87);g.lineWidth=3;g.moveTo(-195,335);g.bezierCurveTo(-92,405,82,294,196,348);g.stroke();
+      for(let x=-160;x<=160;x+=64){
+        g.fillColor=new Color(131,43,47);g.moveTo(x-15,340);g.bezierCurveTo(x-18,320,x+18,320,x+15,340);g.lineTo(x+9,360);g.lineTo(x-9,360);g.close();g.fill();
+        g.fillColor=new Color(250,187,82,165);g.ellipse(x,342,7,10);g.fill();
+      }
+    }else if(level===3){
+      g.fillColor=new Color(22,29,43);g.ellipse(-190,300,64,40);g.fill();g.strokeColor=new Color(102,115,137);g.lineWidth=6;g.ellipse(-190,300,56,33);g.stroke();
+      g.strokeColor=new Color(145,68,158,150);g.lineWidth=2;g.moveTo(-227,307);g.bezierCurveTo(-209,325,-182,276,-150,302);g.stroke();
+      g.fillColor=new Color(224,208,165);g.moveTo(-204,345);g.lineTo(-190,353);g.lineTo(-177,345);g.lineTo(-182,325);g.lineTo(-199,325);g.close();g.fill();
+    }else if(level===4){
+      g.fillColor=new Color(70,66,76);g.moveTo(-300,250);g.bezierCurveTo(-170,230,170,230,300,250);g.lineTo(238,330);g.bezierCurveTo(115,310,-118,310,-238,330);g.close();g.fill();
+      g.strokeColor=new Color(203,164,86);g.lineWidth=2;for(let x=-220;x<=220;x+=55){g.moveTo(x,258);g.bezierCurveTo(x+4,278,x+12,298,x+18,319);}g.stroke();
+    }else if(level===5){
+      g.fillColor=new Color(73,51,49);g.moveTo(-158,304);g.lineTo(-143,288);g.lineTo(142,288);g.lineTo(160,304);g.lineTo(147,415);g.lineTo(-145,415);g.close();g.fill();
+      g.fillColor=new Color(31,29,39);g.moveTo(-188,412);g.bezierCurveTo(-96,450,-44,494,0,512);g.bezierCurveTo(52,488,104,451,190,412);g.close();g.fill();
+      g.strokeColor=new Color(207,168,90);g.lineWidth=2;g.moveTo(-128,325);g.bezierCurveTo(-58,304,57,304,129,325);g.stroke();
+    }else{
+      g.fillColor=new Color(53,46,59);g.moveTo(-216,279);g.lineTo(-200,260);g.lineTo(200,260);g.lineTo(218,279);g.lineTo(208,441);g.lineTo(-205,441);g.close();g.fill();
+      g.fillColor=new Color(26,24,36);g.moveTo(-258,440);g.bezierCurveTo(-142,462,-67,523,0,558);g.bezierCurveTo(70,522,145,466,260,440);g.close();g.fill();
+      g.strokeColor=new Color(181,50,46);g.lineWidth=3;g.moveTo(-45,404);g.bezierCurveTo(-11,432,11,432,45,404);g.moveTo(0,435);g.lineTo(0,463);g.stroke();
     }
-    // cinnabar seal strips on walls
+
+    // 墙面符纸、木牌裂纹、檐下绳结
     for(let x=-300;x<=300;x+=120){
-      g.fillColor=new Color(223,205,160,215);g.roundRect(x,455,25,58,2);g.fill();
-      g.strokeColor=new Color(177,48,44);g.lineWidth=1.5;g.moveTo(x+5,499);g.bezierCurveTo(x+19,490,x+3,475,x+19,463);g.stroke();
+      g.fillColor=new Color(223,205,160,215);g.moveTo(x-12,454);g.lineTo(x+11,452);g.lineTo(x+14,509);g.lineTo(x-10,512);g.close();g.fill();
+      g.strokeColor=new Color(177,48,44);g.lineWidth=1.5;g.moveTo(x-6,500);g.bezierCurveTo(x+9,492,x-8,476,x+8,465);g.moveTo(x-5,481);g.lineTo(x+7,482);g.stroke();
+      g.strokeColor=new Color(87,69,66,120);g.lineWidth=1;g.moveTo(x-22,437);g.bezierCurveTo(x-7,447,x+9,433,x+24,444);g.stroke();
     }
   }
 
   // 构建各个关卡的专属动态小道具（风滚草、摇晃油灯、百叶门、蒸汽喷雾）
   private setupDynamicProps(level: number) {
-    // swaying lantern
     this.lanternNode=new Node('SwayLantern');this.lanternNode.setPosition(level%2===0?-245:245,355,0);this.dynamicRoot.addChild(this.lanternNode);
-    const lg=this.lanternNode.addComponent(Graphics);lg.fillColor=new Color(121,43,43);lg.roundRect(-14,-18,28,36,7);lg.fill();
-    lg.strokeColor=new Color(222,177,85);lg.lineWidth=2;lg.moveTo(0,24);lg.lineTo(0,17);lg.roundRect(-14,-18,28,36,7);lg.stroke();
-    lg.fillColor=new Color(255,199,91,210);lg.ellipse(0,0,8,13);lg.fill();
-    // drifting prayer ribbon
+    const lg=this.lanternNode.addComponent(Graphics);
+    lg.strokeColor=new Color(117,83,64);lg.lineWidth=2;lg.moveTo(0,29);lg.bezierCurveTo(-7,23,7,20,0,16);lg.stroke();
+    lg.fillColor=new Color(118,42,44);lg.moveTo(-14,14);lg.bezierCurveTo(-19,2,-15,-13,-8,-18);lg.lineTo(8,-18);lg.bezierCurveTo(15,-12,19,2,14,14);lg.close();lg.fill();
+    lg.strokeColor=new Color(224,179,88);lg.lineWidth=2;lg.moveTo(-12,11);lg.bezierCurveTo(0,16,0,-18,12,11);lg.stroke();
+    lg.fillColor=new Color(255,201,92,210);lg.moveTo(0,9);lg.bezierCurveTo(7,4,5,-7,0,-12);lg.bezierCurveTo(-6,-6,-6,4,0,9);lg.fill();
+
     this.tumbleNode=new Node('DriftTalisman');this.tumbleNode.setPosition(-300,-80,0);this.dynamicRoot.addChild(this.tumbleNode);
-    const tg=this.tumbleNode.addComponent(Graphics);tg.fillColor=new Color(226,211,170,180);tg.moveTo(-4,15);tg.lineTo(5,14);tg.lineTo(3,-15);tg.lineTo(-6,-13);tg.close();tg.fill();
-    tg.strokeColor=new Color(174,49,45);tg.lineWidth=1.5;tg.moveTo(-2,8);tg.bezierCurveTo(4,3,-3,-3,2,-9);tg.stroke();
+    const tg=this.tumbleNode.addComponent(Graphics);tg.fillColor=new Color(226,211,170,180);
+    tg.moveTo(-5,16);tg.lineTo(6,13);tg.lineTo(4,-15);tg.lineTo(-7,-12);tg.close();tg.fill();
+    tg.strokeColor=new Color(174,49,45);tg.lineWidth=1.5;tg.moveTo(-2,9);tg.bezierCurveTo(4,3,-4,-3,3,-10);tg.stroke();
+
+    // 檐下风符与丝穗，分别摆动
+    for(let i=0;i<5;i++){
+      const n=new Node('WindCharm_'+i);n.setPosition(-280+i*140,390+(i%2)*26,0);this.dynamicRoot.addChild(n);this.windCharmNodes.push(n);
+      const g=n.addComponent(Graphics);g.strokeColor=new Color(124,91,72,180);g.lineWidth=1.3;g.moveTo(0,18);g.lineTo(0,8);g.stroke();
+      g.fillColor=new Color(221,205,165,200);g.moveTo(-6,8);g.lineTo(6,7);g.lineTo(4,-15);g.lineTo(-7,-13);g.close();g.fill();
+      g.strokeColor=new Color(173,49,45);g.lineWidth=1.2;g.moveTo(-3,3);g.bezierCurveTo(4,0,-4,-6,3,-10);g.stroke();
+      g.strokeColor=new Color(210,166,86,150);g.moveTo(-2,-15);g.bezierCurveTo(-6,-23,3,-25,-2,-32);g.moveTo(2,-15);g.bezierCurveTo(6,-22,-2,-27,3,-31);g.stroke();
+    }
+
+    // 地面低空邪雾，用曲线笔迹而非圆形烟团
+    for(let i=0;i<4;i++){
+      const n=new Node('SpiritMist_'+i);n.setPosition(-270+i*180,-210+(i%2)*150,0);this.dynamicRoot.addChild(n);this.spiritMistNodes.push(n);
+      const g=n.addComponent(Graphics);g.strokeColor=new Color(92,68,122,65);g.lineWidth=5;
+      g.moveTo(-28,0);g.bezierCurveTo(-12,13,3,-11,17,3);g.bezierCurveTo(26,11,35,1,42,7);g.stroke();
+      g.strokeColor=new Color(115,82,142,38);g.lineWidth=2;g.moveTo(-18,8);g.bezierCurveTo(-1,18,13,-2,31,8);g.stroke();
+    }
     this.doorsNode=undefined;this.steamNode=undefined;
   }
 
@@ -196,10 +240,11 @@ export class NightTownWorld extends Component {
       }
     }
 
-    // 3. 酒馆百叶摇摆门随微风轻晃
-    if (this.doorsNode && this.doorsNode.isValid) {
-      const scaleX = 1 + Math.sin(this.worldTimer * 2.6) * 0.08;
-      this.doorsNode.setScale(scaleX, 1, 1);
+    for(let i=0;i<this.windCharmNodes.length;i++){
+      const n=this.windCharmNodes[i];if(n?.isValid){n.angle=Math.sin(this.worldTimer*1.7+i*.8)*10;n.setScale(1,1+Math.sin(this.worldTimer*2.1+i)*.05,1);}
+    }
+    for(let i=0;i<this.spiritMistNodes.length;i++){
+      const n=this.spiritMistNodes[i];if(n?.isValid){n.setPosition(-280+((this.worldTimer*(16+i*3)+i*170)%620),-220+(i%2)*160+Math.sin(this.worldTimer*.8+i)*12,0);n.setScale(1+Math.sin(this.worldTimer*.7+i)*.16,1,1);}
     }
   }
 
