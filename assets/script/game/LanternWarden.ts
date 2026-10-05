@@ -98,7 +98,7 @@ export class LanternWarden extends Component {
     this.bodyRoot.addChild(this.holsterNode);
     this.drawHolster(this.holsterNode);
 
-    // 头部（脸型、短须、雪茄、帅气巡夜师宽檐帽）
+    // 头部（眉眼、束发、发冠与面部层次）
     this.headNode = new Node('Head');
     this.headNode.setPosition(0, 24, 0);
     this.bodyRoot.addChild(this.headNode);
@@ -116,7 +116,7 @@ export class LanternWarden extends Component {
     this.drawGun(this.gunNode, this.curGun);
   }
 
-  // 绘制腿部与皮马靴、银色马刺
+  // 绘制腿部、绑腿与夜行软靴
   private drawLeg(node: Node, isLeft: boolean) {
     const g=node.addComponent(Graphics); g.clear();
     const side=isLeft?-1:1;
@@ -158,7 +158,7 @@ export class LanternWarden extends Component {
     g.fillColor=new Color(219,174,82);g.circle(-5,0,1.7);g.fill();
   }
 
-  // 绘制头部、巡夜师宽檐帽、斜插羽毛、微斑胡茬与雪茄
+  // 绘制巡夜师眉眼、束发、发冠与灯穗细节
   private drawHead(node: Node) {
     const g=node.addComponent(Graphics);g.clear();
     g.fillColor=new Color(228,181,145);g.roundRect(-7,-4,14,15,4);g.fill();
@@ -410,7 +410,7 @@ export class LanternWarden extends Component {
     }
   }
 
-  // 雪茄袅袅青烟
+  // 符灯逸出细小灵火
   private spawnCigarSmoke() {
     const parent=this.node.parent;if(!parent)return;
     const n=new Node('LanternWisp');const facing=this.node.scale.x;
