@@ -36,7 +36,7 @@ export class TalismanSystem {
 
     // 武器对牌型的专属强化加成
     if (this.curGun === 'revolver' && combo.type === 'single') {
-      baseDmg *= 1.25; // 左轮强化单牌
+      baseDmg *= 1.25; // 铜铃符灯强化单符
     }
     if (this.curGun === 'lever' && combo.type === 'straight') {
       baseDmg *= 1.35; // 杠杆步枪强化顺子
@@ -45,7 +45,7 @@ export class TalismanSystem {
       baseDmg *= 1.45; // 双管强化对子
     }
     if (this.curGun === 'bounce' && combo.mainSuit === 'club') {
-      baseDmg *= 1.3; // 弹跳左轮强化风印
+      baseDmg *= 1.3; // 回风灵符强化风印
     }
     if (this.curGun === 'cannon' && (combo.mainSuit === 'diamond' || combo.type === 'fullhouse')) {
       baseDmg *= 1.25; // 炸药筒强化灵印与重爆
@@ -62,7 +62,7 @@ export class TalismanSystem {
     let blastRadius = (combo.mainSuit === 'diamond' || combo.type === 'fullhouse' ? 70 : 0) * this.blastRadiusMul;
     let vampireAmount = combo.mainSuit === 'heart' ? 1 + this.vampireBonus : 0;
 
-    // 弹跳左轮额外加成
+    // 回风灵符额外加成
     if (this.curGun === 'bounce') {
       bounceCount += 2;
     }
@@ -100,7 +100,7 @@ export class TalismanSystem {
         break;
       }
       case 'pair': {
-        // 双发并射（双管猎枪则增加到4发）
+        // 双印并发（双叠火符增加到4道）
         const shotCount = this.curGun === 'shotgun' ? 4 : 2;
         const spread = 0.12;
         for (let i = 0; i < shotCount; i++) {
