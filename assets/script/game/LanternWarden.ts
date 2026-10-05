@@ -118,445 +118,92 @@ export class LanternWarden extends Component {
 
   // 绘制腿部与皮马靴、银色马刺
   private drawLeg(node: Node, isLeft: boolean) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    // 深蓝灰巡夜师裤腿
-    g.fillColor = new Color(42, 52, 65);
-    g.roundRect(-4.5, -14, 9, 16, 2);
-    g.fill();
-
-    // 巡夜师皮套裤（Chaps）外侧流苏与银色海螺垫片
-    g.fillColor = new Color(75, 45, 25);
-    const fringeX = isLeft ? -5 : 5;
-    g.rect(fringeX - 1.5, -13, 3, 14);
-    g.fill();
-    // 3个银色圆形海螺钉
-    g.fillColor = new Color(225, 230, 240);
-    g.circle(fringeX, -3, 1.2);
-    g.circle(fringeX, -7, 1.2);
-    g.circle(fringeX, -11, 1.2);
-    g.fill();
-
-    // 棕色皮马靴（双层鞋底与翘尖）
-    g.fillColor = new Color(68, 38, 20);
-    g.roundRect(-5, -20, 10, 8, 2);
-    g.fill();
-    // 靴尖微翘厚底
-    g.fillColor = new Color(40, 22, 12);
-    g.rect(-5, -21.5, 10, 2);
-    g.ellipse(isLeft ? -4.5 : 4.5, -18.5, 4.5, 3.2);
-    g.fill();
-
-    // 脚后跟银色马刺五角齿轮
-    g.strokeColor = new Color(230, 235, 245);
-    g.lineWidth = 1.5;
-    const spurX = isLeft ? 4.5 : -4.5;
-    g.circle(spurX, -18, 3);
-    g.stroke();
-    // 齿轮尖刺
-    g.fillColor = new Color(240, 240, 255);
-    g.rect(spurX - 0.8, -21.5, 1.6, 7);
-    g.rect(spurX - 3.5, -18.8, 7, 1.6);
-    g.fill();
+    const g=node.addComponent(Graphics); g.clear();
+    const side=isLeft?-1:1;
+    g.fillColor=new Color(37,48,75); g.moveTo(-5,2);g.lineTo(5,2);g.lineTo(4,-15);g.lineTo(-4,-15);g.close();g.fill();
+    g.strokeColor=new Color(96,111,143);g.lineWidth=1.2;g.moveTo(side*1,0);g.lineTo(side*2,-13);g.stroke();
+    g.fillColor=new Color(27,28,39);g.roundRect(-5,-20,10,7,2);g.fill();
+    g.strokeColor=new Color(183,142,80);g.lineWidth=1;g.moveTo(-4,-17);g.lineTo(4,-17);g.stroke();
+    g.fillColor=new Color(161,49,44);g.rect(side>0?2:-4,-9,2,6);g.fill();
   }
 
   // 绘制长风衣下摆（双层披肩、撕裂毛边与风衣暗褶）
   private drawCape(node: Node) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    // 外层暗褐厚牛皮风衣
-    g.fillColor = new Color(72, 42, 24);
-    g.moveTo(-13, 0);
-    g.lineTo(13, 0);
-    g.lineTo(18, -27);
-    g.lineTo(-18, -27);
-    g.close();
-    g.fill();
-
-    // 内衬深色夹里
-    g.fillColor = new Color(48, 28, 16);
-    g.moveTo(-11, -2);
-    g.lineTo(0, -2);
-    g.lineTo(-2, -26);
-    g.lineTo(-16, -26);
-    g.close();
-    g.fill();
-
-    // 背部防雨小披肩层（Capelet）
-    g.fillColor = new Color(85, 52, 30);
-    g.moveTo(-12, 0);
-    g.lineTo(12, 0);
-    g.lineTo(14, -10);
-    g.lineTo(-14, -10);
-    g.close();
-    g.fill();
-
-    // 风衣磨损毛边与裂口细节
-    g.strokeColor = new Color(38, 22, 12);
-    g.lineWidth = 1.2;
-    g.moveTo(-16, -27);
-    g.lineTo(-12, -23);
-    g.lineTo(-8, -27);
-    g.lineTo(-2, -24);
-    g.lineTo(4, -27);
-    g.lineTo(11, -24);
-    g.lineTo(18, -27);
-    g.stroke();
+    const g=node.addComponent(Graphics); g.clear();
+    g.fillColor=new Color(29,42,70);g.moveTo(-14,4);g.bezierCurveTo(-20,-5,-17,-24,-10,-31);g.lineTo(-2,-25);g.lineTo(2,-32);g.lineTo(11,-25);g.bezierCurveTo(18,-13,19,-2,13,4);g.close();g.fill();
+    g.fillColor=new Color(48,61,91);g.moveTo(-12,3);g.lineTo(12,3);g.lineTo(9,-8);g.bezierCurveTo(2,-4,-3,-4,-10,-9);g.close();g.fill();
+    g.strokeColor=new Color(119,135,169);g.lineWidth=1.2;g.moveTo(-9,-5);g.bezierCurveTo(-3,-10,2,-4,8,-9);g.moveTo(-8,-17);g.bezierCurveTo(-1,-21,3,-15,9,-20);g.stroke();
+    g.fillColor=new Color(179,51,46);g.moveTo(7,-19);g.lineTo(13,-25);g.lineTo(9,-11);g.close();g.fill();
   }
 
   // 绘制躯干（亚麻开领衬衫、做旧皮背心、立体飞符带）
   private drawTorso(node: Node) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    // 粗布亚麻米白衬衫
-    g.fillColor = new Color(228, 222, 208);
-    g.roundRect(-9, -4, 18, 24, 3);
-    g.fill();
-
-    // V型开领露出的古铜色肌肤与胸锁线条
-    g.fillColor = new Color(215, 165, 130);
-    g.moveTo(-4, 20);
-    g.lineTo(4, 20);
-    g.lineTo(0, 11);
-    g.close();
-    g.fill();
-
-    // 深褐做旧皮背心（双侧对称翻领）
-    g.fillColor = new Color(90, 52, 30);
-    g.moveTo(-10, 20);
-    g.lineTo(-3, 20);
-    g.lineTo(-1.5, 4);
-    g.lineTo(-10, -3);
-    g.close();
-    g.fill();
-
-    g.moveTo(10, 20);
-    g.lineTo(3, 20);
-    g.lineTo(1.5, 4);
-    g.lineTo(10, -3);
-    g.close();
-    g.fill();
-
-    // 黄铜小排扣
-    g.fillColor = new Color(230, 185, 60);
-    g.circle(0, 3, 1.2);
-    g.circle(0, -1, 1.2);
-    g.fill();
-
-    // 斜跨宽牛皮飞符带（带缝线压纹）
-    g.strokeColor = new Color(55, 32, 16);
-    g.lineWidth = 4.5;
-    g.moveTo(-9, 18);
-    g.lineTo(9, -2);
-    g.stroke();
-
-    // 4颗立体高光步枪弹药（金色铜壳+银铅弹尖）
-    const bulletPts = [
-      { x: -5, y: 13 },
-      { x: -1.5, y: 9 },
-      { x: 2, y: 5 },
-      { x: 5.5, y: 1 }
-    ];
-    for (const pt of bulletPts) {
-      // 铜壳
-      g.fillColor = new Color(235, 190, 55);
-      g.rect(pt.x - 1.2, pt.y - 1.2, 2.4, 2.4);
-      g.fill();
-      // 银色符印
-      g.fillColor = new Color(200, 205, 215);
-      g.circle(pt.x + 0.8, pt.y - 0.8, 1.0);
-      g.fill();
-    }
-
-    // 颈部潇洒系结的鲜红古镇夜巡领巾（带飘拂角）
-    g.fillColor = new Color(195, 32, 32);
-    g.moveTo(-7, 20);
-    g.lineTo(0, 23);
-    g.lineTo(7, 20);
-    g.lineTo(3, 13);
-    g.lineTo(-3, 13);
-    g.close();
-    g.fill();
-    // 领巾系角
-    g.moveTo(0, 14);
-    g.lineTo(2, 8);
-    g.lineTo(0, 9);
-    g.lineTo(-2, 8);
-    g.close();
-    g.fill();
+    const g=node.addComponent(Graphics);g.clear();
+    g.fillColor=new Color(228,219,192);g.roundRect(-10,-5,20,26,4);g.fill();
+    g.fillColor=new Color(42,57,88);g.moveTo(-11,20);g.lineTo(-2,20);g.lineTo(0,4);g.lineTo(-10,-4);g.close();g.fill();
+    g.moveTo(11,20);g.lineTo(2,20);g.lineTo(0,4);g.lineTo(10,-4);g.close();g.fill();
+    g.strokeColor=new Color(170,50,45);g.lineWidth=2;g.moveTo(-1,18);g.bezierCurveTo(-6,12,5,9,-2,3);g.bezierCurveTo(4,0,-4,-3,3,-6);g.stroke();
+    g.fillColor=new Color(173,53,47);g.rect(-11,-5,22,4);g.fill();
+    g.strokeColor=new Color(218,176,93);g.lineWidth=1.4;g.moveTo(-9,-2);g.lineTo(9,-2);g.stroke();
+    g.fillColor=new Color(220,197,139);g.roundRect(-14,-4,7,12,2);g.fill();
+    g.strokeColor=new Color(173,53,47);g.lineWidth=1;g.moveTo(-12,5);g.lineTo(-8,-1);g.stroke();
   }
 
   // 绘制腰间皮枪套（大腿系腿皮绳与雕花铜带扣）
   private drawHolster(node: Node) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    // 雕花皮带
-    g.fillColor = new Color(55, 32, 16);
-    g.rect(-8, 0, 16, 3);
-    g.fill();
-
-    // 经典右侧倾斜快拔皮枪套
-    g.fillColor = new Color(68, 38, 20);
-    g.moveTo(-2, 0);
-    g.lineTo(5, 0);
-    g.lineTo(3, -15);
-    g.lineTo(-3, -13);
-    g.close();
-    g.fill();
-
-    // 固定在右大腿上的系腿小皮带（Leg Tie）
-    g.strokeColor = new Color(48, 26, 14);
-    g.lineWidth = 1.2;
-    g.moveTo(-3, -10);
-    g.lineTo(-7, -11);
-    g.stroke();
-
-    // 雕花黄铜带扣
-    g.fillColor = new Color(225, 180, 60);
-    g.circle(0, 1.5, 1.8);
-    g.fill();
+    const g=node.addComponent(Graphics);g.clear();
+    g.fillColor=new Color(96,66,48);g.roundRect(-7,-2,14,5,2);g.fill();
+    g.fillColor=new Color(224,204,151);g.moveTo(-2,-2);g.lineTo(6,-2);g.lineTo(5,-16);g.lineTo(-4,-14);g.close();g.fill();
+    g.strokeColor=new Color(177,51,45);g.lineWidth=1.5;g.moveTo(-1,-5);g.lineTo(4,-12);g.moveTo(4,-5);g.lineTo(-1,-12);g.stroke();
+    g.fillColor=new Color(219,174,82);g.circle(-5,0,1.7);g.fill();
   }
 
   // 绘制头部、巡夜师宽檐帽、斜插羽毛、微斑胡茬与雪茄
   private drawHead(node: Node) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    // 刚毅脸庞与下颌阴影
-    g.fillColor = new Color(235, 185, 150);
-    g.roundRect(-7, -4, 14, 15, 3.5);
-    g.fill();
-
-    // 下巴刚毅短胡茬（细密小层次点阵）
-    g.fillColor = new Color(90, 65, 55, 160);
-    for (let x = -5; x <= 5; x += 1.8) {
-      for (let y = -3; y <= 1; y += 1.8) {
-        g.circle(x, y, 0.7);
-      }
-    }
-    g.fill();
-
-    // 锐利眼神与剑眉
-    g.strokeColor = new Color(40, 25, 15);
-    g.lineWidth = 1.2;
-    g.moveTo(0.5, 6);
-    g.lineTo(4, 5.5);
-    g.moveTo(-0.5, 6);
-    g.lineTo(-4, 5.5);
-    g.stroke();
-
-    g.fillColor = new Color(20, 18, 18);
-    g.circle(2.2, 4, 1.1);
-    g.circle(-2.2, 4, 1.1);
-    g.fill();
-
-    // 嘴角雪茄（多层烟草纹路、金色烟标、明亮发光余烬）
-    g.fillColor = new Color(95, 52, 28);
-    g.rect(4, -0.5, 8, 2.5);
-    g.fill();
-    // 金色烟标环
-    g.fillColor = new Color(235, 195, 60);
-    g.rect(7, -0.5, 2, 2.5);
-    g.fill();
-    // 烟头火星余烬
-    g.fillColor = new Color(255, 55, 15);
-    g.circle(12, 0.7, 1.3);
-    g.fill();
-    g.fillColor = new Color(255, 215, 80);
-    g.circle(12, 0.7, 0.6);
-    g.fill();
-
-    // 古镇夜巡宽檐帽（起伏弧度卷边、编织帽箍、双缝线与斜插翠蓝羽毛）
-    // 宽檐底层阴影
-    g.fillColor = new Color(45, 26, 14);
-    g.ellipse(0, 10, 24, 5);
-    g.fill();
-    // 弧度卷边帽檐
-    g.fillColor = new Color(72, 42, 22);
-    g.ellipse(0, 11.5, 23.5, 4.5);
-    g.fill();
-    // 帽檐缝线虚线
-    g.strokeColor = new Color(130, 85, 45);
-    g.lineWidth = 0.8;
-    g.ellipse(0, 11.5, 21, 3.8);
-    g.stroke();
-
-    // 立体梯形帽筒
-    g.fillColor = new Color(86, 50, 28);
-    g.moveTo(-10, 11);
-    g.lineTo(10, 11);
-    g.lineTo(8.5, 23);
-    g.lineTo(-8.5, 23);
-    g.close();
-    g.fill();
-
-    // 压花编织皮帽箍
-    g.fillColor = new Color(40, 22, 12);
-    g.rect(-10, 11.5, 20, 3.5);
-    g.fill();
-    // 黄铜马蹄带扣
-    g.strokeColor = new Color(240, 195, 65);
-    g.lineWidth = 1.2;
-    g.circle(-1.5, 13, 1.8);
-    g.stroke();
-
-    // 斜插翠蓝野鸡羽毛（带羽梗与深蓝羽斑）
-    g.strokeColor = new Color(240, 240, 250);
-    g.lineWidth = 1;
-    g.moveTo(2, 13);
-    g.lineTo(10, 27);
-    g.stroke();
-    // 翠绿与深蓝羽瓣
-    g.fillColor = new Color(25, 135, 165);
-    g.ellipse(7, 21, 3, 6);
-    g.fill();
+    const g=node.addComponent(Graphics);g.clear();
+    g.fillColor=new Color(228,181,145);g.roundRect(-7,-4,14,15,4);g.fill();
+    g.strokeColor=new Color(48,36,33);g.lineWidth=1.4;g.moveTo(-5,6);g.lineTo(-1,7);g.moveTo(1,7);g.lineTo(5,6);g.stroke();
+    g.fillColor=new Color(28,27,31);g.circle(-2.6,4.2,1);g.circle(2.6,4.2,1);g.fill();
+    g.strokeColor=new Color(131,70,52);g.lineWidth=1;g.moveTo(-2,-1);g.bezierCurveTo(0,-2,2,-2,4,-1);g.stroke();
+    g.fillColor=new Color(27,31,43);g.moveTo(-8,10);g.bezierCurveTo(-6,20,-2,23,0,25);g.bezierCurveTo(4,22,8,18,8,10);g.close();g.fill();
+    g.fillColor=new Color(35,39,54);g.ellipse(0,11,15,3);g.fill();
+    g.strokeColor=new Color(177,52,46);g.lineWidth=2;g.moveTo(-7,13);g.lineTo(7,13);g.stroke();
+    g.strokeColor=new Color(216,174,91);g.lineWidth=1.2;g.moveTo(7,17);g.bezierCurveTo(13,22,13,27,10,30);g.stroke();
   }
 
   // 绘制手臂与皮手套
   private drawArm(node: Node) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    // 风衣衣袖（带褶皱与皮带扣）
-    g.fillColor = new Color(82, 48, 26);
-    g.roundRect(0, -3.5, 14, 7, 3);
-    g.fill();
-    // 袖口紧固皮带
-    g.fillColor = new Color(45, 25, 15);
-    g.rect(10, -3.5, 2.5, 7);
-    g.fill();
-
-    // 深色做旧皮手套（紧握姿势）
-    g.fillColor = new Color(52, 30, 16);
-    g.circle(15, 0, 3.8);
-    g.fill();
-    g.fillColor = new Color(210, 165, 60);
-    g.circle(14, 1.5, 1.0); // 手套黄铜铆钉
-    g.fill();
+    const g=node.addComponent(Graphics);g.clear();
+    g.fillColor=new Color(44,58,88);g.roundRect(0,-4,15,8,3);g.fill();
+    g.strokeColor=new Color(113,132,164);g.lineWidth=1;g.moveTo(3,2);g.lineTo(10,-2);g.stroke();
+    g.fillColor=new Color(219,178,142);g.circle(16,0,4);g.fill();
+    g.fillColor=new Color(178,52,46);g.rect(10,-4,3,8);g.fill();
   }
 
   // 绘制符灯模型（全面提升5种武器的细节结构）
   private drawGun(node: Node, gun: GunType) {
-    let g = node.getComponent(Graphics);
-    if (!g) {
-      g = node.addComponent(Graphics);
-    }
-    g.clear();
-
-    switch (gun) {
-      case 'revolver':
-      case 'bounce': {
-        // 巡夜师柯尔特左轮：红木雕花手柄、黄铜击锤、转轮膛线槽、八角枪管
-        // 握把
-        g.fillColor = new Color(115, 48, 22);
-        g.roundRect(-3, -7, 5.5, 9, 2);
-        g.fill();
-        g.fillColor = new Color(225, 185, 60);
-        g.circle(-0.5, -3, 1.0); // 握把黄铜螺丝
-        g.fill();
-
-        // 银灰枪机与八角枪管
-        g.fillColor = new Color(175, 180, 188);
-        g.roundRect(0, -1.2, 16, 4.2, 1);
-        g.fill();
-        // 符灯准星尖
-        g.fillColor = new Color(80, 85, 95);
-        g.rect(14, 2.2, 1.8, 1.5);
-        g.fill();
-
-        // 转轮弹巢（带有6个阴影膛线槽孔）
-        g.fillColor = new Color(85, 90, 100);
-        g.circle(2.5, 0.8, 3.8);
-        g.fill();
-        g.fillColor = new Color(45, 50, 60);
-        g.circle(1.2, 2.2, 1.0);
-        g.circle(3.8, 2.2, 1.0);
-        g.circle(2.5, -0.5, 1.0);
-        g.fill();
-
-        // 击锤与扳机护圈
-        g.fillColor = new Color(60, 65, 75);
-        g.rect(-2, 3, 3, 2.5);
-        g.fill();
-        g.strokeColor = new Color(140, 145, 155);
-        g.lineWidth = 1.0;
-        g.ellipse(1, -2, 2.5, 1.8);
-        g.stroke();
-        break;
-      }
-      case 'lever': {
-        // 温彻斯特1873步枪：红木长枪托、亮黄铜机匣、长下管弹仓、杠杆环
-        g.fillColor = new Color(90, 42, 18);
-        g.roundRect(-9, -4.5, 10, 6.5, 2); // 木托
-        g.fill();
-        // 经典黄铜机匣
-        g.fillColor = new Color(215, 168, 55);
-        g.roundRect(0, -2, 7, 5.5, 1);
-        g.fill();
-        // 黑色长枪管与下弹仓
-        g.fillColor = new Color(45, 48, 55);
-        g.roundRect(6, -0.8, 19, 3.5, 1);
-        g.roundRect(6, -2.5, 18, 1.8, 0.5); // 下置供弹管
-        g.fill();
-        // 杠杆扳机大圆环
-        g.strokeColor = new Color(190, 195, 205);
-        g.lineWidth = 1.2;
-        g.ellipse(1.5, -3.8, 3.5, 2.2);
-        g.stroke();
-        break;
-      }
-      case 'shotgun': {
-        // 双管霰弹枪：厚重木托、双排并列粗大发黑符灯、折管扣
-        g.fillColor = new Color(85, 40, 18);
-        g.roundRect(-8, -4.5, 9, 6.5, 2);
-        g.fill();
-        // 枪机
-        g.fillColor = new Color(65, 70, 80);
-        g.roundRect(0, -2.5, 6, 6.8, 1.5);
-        g.fill();
-        // 双管并排黑色大口径枪管
-        g.fillColor = new Color(42, 45, 52);
-        g.roundRect(5, -2.8, 15, 7, 1.5);
-        g.fill();
-        // 双枪孔切面
-        g.fillColor = new Color(15, 15, 18);
-        g.ellipse(20, 0.8, 1.2, 1.6);
-        g.ellipse(20, -1.0, 1.2, 1.6);
-        g.fill();
-        break;
-      }
-      case 'cannon': {
-        // 炸药重型发射炮：生锈铸铁炮身、加固黄铜箍圈、压力表盘与粗大炮管
-        g.fillColor = new Color(75, 38, 18);
-        g.roundRect(-7, -4.5, 8, 7.5, 2);
-        g.fill();
-        // 厚重铸铁炮身
-        g.fillColor = new Color(55, 58, 65);
-        g.roundRect(0, -4, 20, 9.5, 2);
-        g.fill();
-        // 加固黄铜铆钉箍
-        g.fillColor = new Color(225, 170, 50);
-        g.rect(6, -4, 2.5, 9.5);
-        g.rect(14, -4, 2.5, 9.5);
-        g.fill();
-        // 侧面小气压表盘
-        g.fillColor = new Color(255, 255, 255);
-        g.circle(4, 4, 2.2);
-        g.fill();
-        g.strokeColor = new Color(210, 150, 40);
-        g.lineWidth = 0.8;
-        g.circle(4, 4, 2.2);
-        g.stroke();
-        // 黑色深邃炮口
-        g.fillColor = new Color(15, 15, 15);
-        g.ellipse(20, 0.7, 2.2, 4.5);
-        g.fill();
-        break;
-      }
+    let g=node.getComponent(Graphics);if(!g)g=node.addComponent(Graphics);g.clear();
+    if(gun==='revolver'){
+      g.strokeColor=new Color(184,138,75);g.lineWidth=3;g.moveTo(-2,0);g.lineTo(10,0);g.stroke();
+      g.fillColor=new Color(198,151,78);g.circle(11,0,5);g.fill();
+      g.fillColor=new Color(255,213,112,210);g.ellipse(11,0,3,4);g.fill();
+      g.strokeColor=new Color(177,51,45);g.lineWidth=1.5;g.moveTo(9,3);g.lineTo(13,-3);g.stroke();
+    } else if(gun==='lever'){
+      g.fillColor=new Color(224,207,158);g.roundRect(-3,-5,25,10,2);g.fill();
+      g.strokeColor=new Color(165,48,43);g.lineWidth=2;g.moveTo(1,2);g.bezierCurveTo(7,7,12,-5,19,2);g.stroke();
+      g.fillColor=new Color(218,176,86);g.rect(20,-3,6,6);g.fill();
+    } else if(gun==='shotgun'){
+      g.fillColor=new Color(224,207,158);g.moveTo(-2,-7);g.lineTo(24,-4);g.lineTo(24,4);g.lineTo(-2,7);g.close();g.fill();
+      g.strokeColor=new Color(181,51,46);g.lineWidth=2;g.moveTo(2,-3);g.lineTo(20,0);g.moveTo(2,3);g.lineTo(20,0);g.stroke();
+      g.fillColor=new Color(245,158,67,210);g.circle(24,0,4);g.fill();
+    } else if(gun==='bounce'){
+      g.fillColor=new Color(212,199,151);g.roundRect(-2,-5,20,10,3);g.fill();
+      g.strokeColor=new Color(76,129,123);g.lineWidth=2;g.moveTo(1,2);g.bezierCurveTo(6,7,12,-6,17,1);g.stroke();
+      g.fillColor=new Color(118,177,163);g.circle(19,0,4);g.fill();
+    } else {
+      g.fillColor=new Color(58,48,69);g.roundRect(-4,-7,28,14,4);g.fill();
+      g.strokeColor=new Color(219,177,87);g.lineWidth=2;g.roundRect(1,-5,18,10,3);g.stroke();
+      g.fillColor=new Color(178,52,47);g.moveTo(6,4);g.lineTo(12,-4);g.lineTo(18,4);g.close();g.fill();
     }
   }
 
