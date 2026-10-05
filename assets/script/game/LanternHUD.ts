@@ -62,16 +62,16 @@ export class LanternHUD extends Component {
 
     // 生命与护盾底框（左侧，微调位置给中间木牌留足空间）
     const hpBox = new Node('HpBox');
-    hpBox.setPosition(-262, 580, 0);
+    hpBox.setPosition(120, 520, 0);
     topRoot.addChild(hpBox);
 
     const boxG = hpBox.addComponent(Graphics);
     // 皮革底纹
-    boxG.fillColor = new Color(55, 32, 18, 220);
+    boxG.fillColor = new Color(20, 31, 58, 225);
     boxG.roundRect(-68, -16, 136, 32, 6);
     boxG.fill();
     // 黄铜边框
-    boxG.strokeColor = new Color(205, 160, 65);
+    boxG.strokeColor = new Color(222, 183, 96);
     boxG.lineWidth = 1.8;
     boxG.roundRect(-68, -16, 136, 32, 6);
     boxG.stroke();
@@ -90,24 +90,24 @@ export class LanternHUD extends Component {
 
     // 关卡名称展示木牌（加宽到310px，保证完全框住关卡与事件长文本）
     const stageSign = new Node('StageSign');
-    stageSign.setPosition(-19, 580, 0);
+    stageSign.setPosition(-205, 580, 0);
     topRoot.addChild(stageSign);
     const signG = stageSign.addComponent(Graphics);
-    signG.fillColor = new Color(75, 45, 25, 230);
-    signG.roundRect(-155, -18, 310, 36, 6);
+    signG.fillColor = new Color(21, 34, 66, 235);
+    signG.roundRect(-120, -18, 240, 36, 8);
     signG.fill();
-    signG.strokeColor = new Color(215, 175, 80);
+    signG.strokeColor = new Color(213, 174, 92);
     signG.lineWidth = 1.8;
-    signG.roundRect(-155, -18, 310, 36, 6);
+    signG.roundRect(-120, -18, 240, 36, 8);
     signG.stroke();
 
     const stageLblNode = new Node('StageText');
     stageSign.addChild(stageLblNode);
     // 给文字节点加上尺寸限制与自动缩小模式，彻底避免文字超出木牌外框
     const signUi = stageLblNode.addComponent(UITransform);
-    signUi.setContentSize(294, 30);
+    signUi.setContentSize(224, 30);
     this.stageLabel = stageLblNode.addComponent(Label);
-    this.stageLabel.string = '边境车站';
+    this.stageLabel.string = '青石巷口';
     this.stageLabel.fontSize = 14;
     this.stageLabel.lineHeight = 16;
     this.stageLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
@@ -117,13 +117,13 @@ export class LanternHUD extends Component {
 
     // 灵火显示（右侧，对称对齐）
     const coinNode = new Node('CoinBox');
-    coinNode.setPosition(198, 580, 0);
+    coinNode.setPosition(-285, 520, 0);
     topRoot.addChild(coinNode);
     const cg = coinNode.addComponent(Graphics);
-    cg.fillColor = new Color(55, 32, 18, 220);
+    cg.fillColor = new Color(37, 30, 58, 225);
     cg.roundRect(-42, -16, 84, 32, 5);
     cg.fill();
-    cg.strokeColor = new Color(205, 160, 65);
+    cg.strokeColor = new Color(207, 155, 82);
     cg.lineWidth = 1.5;
     cg.roundRect(-42, -16, 84, 32, 5);
     cg.stroke();
@@ -191,38 +191,38 @@ export class LanternHUD extends Component {
 
   // 2. 左下大尺寸触摸虚拟摇杆
   private createJoystick() {
-    const joyRoot = new Node('Joystick');
+    const joyRoot = new Node('InkCompass');
     this.node.addChild(joyRoot);
-
-    // 摇杆底盘（大半径 85）
-    this.stickBaseNode = new Node('JoyBase');
+    this.stickBaseNode = new Node('CompassBase');
     this.stickBaseNode.addComponent(UITransform).setContentSize(170, 170);
     this.stickBaseNode.setPosition(this.stickCenter.x, this.stickCenter.y, 0);
     joyRoot.addChild(this.stickBaseNode);
 
     const bg = this.stickBaseNode.addComponent(Graphics);
-    bg.fillColor = new Color(30, 20, 15, 120);
-    bg.circle(0, 0, 85);
-    bg.fill();
-    bg.strokeColor = new Color(210, 165, 60, 180);
-    bg.lineWidth = 3;
-    bg.circle(0, 0, 85);
+    bg.fillColor = new Color(10, 18, 38, 145);
+    bg.circle(0, 0, 84); bg.fill();
+    bg.strokeColor = new Color(201, 163, 88, 205); bg.lineWidth = 2.5; bg.circle(0, 0, 82); bg.stroke();
+    bg.strokeColor = new Color(119, 139, 174, 150); bg.lineWidth = 1.2;
+    bg.circle(0, 0, 62); bg.stroke();
+    for (let i = 0; i < 8; i++) {
+      const a = i * Math.PI / 4;
+      bg.moveTo(Math.cos(a) * 50, Math.sin(a) * 50);
+      bg.lineTo(Math.cos(a) * 72, Math.sin(a) * 72);
+    }
     bg.stroke();
+    bg.strokeColor = new Color(184, 54, 48, 210); bg.lineWidth = 2;
+    bg.moveTo(0, 56); bg.lineTo(7, 40); bg.lineTo(0, 44); bg.lineTo(-7, 40); bg.close(); bg.stroke();
 
-    // 摇杆核心操纵球
-    this.stickThumbNode = new Node('JoyThumb');
+    this.stickThumbNode = new Node('InkSealThumb');
     this.stickBaseNode.addChild(this.stickThumbNode);
     const tg = this.stickThumbNode.addComponent(Graphics);
-    tg.fillColor = new Color(90, 52, 28, 230);
-    tg.circle(0, 0, 36);
-    tg.fill();
-    tg.strokeColor = new Color(245, 205, 90);
-    tg.lineWidth = 2.5;
-    tg.circle(0, 0, 36);
-    tg.stroke();
-    TalismanRenderer.drawStarBadge(tg, 0, 0, 12, new Color(245, 205, 90));
+    tg.fillColor = new Color(28, 43, 72, 235); tg.circle(0, 0, 34); tg.fill();
+    tg.strokeColor = new Color(230, 190, 100); tg.lineWidth = 2.5; tg.circle(0, 0, 34); tg.stroke();
+    tg.strokeColor = new Color(193, 55, 48); tg.lineWidth = 2;
+    tg.moveTo(-10, 9); tg.bezierCurveTo(-2, 14, 5, 8, 9, 12);
+    tg.moveTo(-9, 0); tg.bezierCurveTo(-3, -5, 3, 7, 10, 0);
+    tg.moveTo(-8, -10); tg.lineTo(8, -10); tg.stroke();
 
-    // 触摸监听事件绑定
     this.stickBaseNode.on(Node.EventType.TOUCH_START, this.onTouchMove, this);
     this.stickBaseNode.on(Node.EventType.TOUCH_MOVE, this.onTouchMove, this);
     this.stickBaseNode.on(Node.EventType.TOUCH_END, this.onTouchEnd, this);
@@ -267,9 +267,15 @@ export class LanternHUD extends Component {
 
   // 3. 底部大符箓符箓栏栏
   private createHandRow() {
-    this.handRowNode = new Node('HandRow');
-    this.handRowNode.setPosition(0, -560, 0);
+    this.handRowNode = new Node('TalismanRow');
+    this.handRowNode.setPosition(0, -520, 0);
     this.node.addChild(this.handRowNode);
+    const rail = new Node('TalismanRail');
+    rail.setPosition(0, -3, 0);
+    this.handRowNode.addChild(rail);
+    const g = rail.addComponent(Graphics);
+    g.fillColor = new Color(12, 22, 43, 165); g.roundRect(-218, -57, 436, 114, 16); g.fill();
+    g.strokeColor = new Color(183, 142, 78, 150); g.lineWidth = 1.5; g.roundRect(-218, -57, 436, 114, 16); g.stroke();
   }
 
   // 记录选中的卡牌编号
@@ -293,16 +299,16 @@ export class LanternHUD extends Component {
     const total = cards.length;
     const cardW = 68;
     const cardH = 98;
-    const spacing = 72;
+    const spacing = 70;
 
     for (let i = 0; i < total; i++) {
       const card = cards[i];
       const cNode = new Node(`Card_${card.id}`);
       const offset = (i - (total - 1) / 2) * spacing;
       const isSel = this.selectedIds.has(card.id);
-      const arcY = -Math.abs(offset) * 0.08 + (isSel ? 22 : 0);
+      const arcY = isSel ? 16 : 0;
       cNode.setPosition(offset, arcY, 0);
-      cNode.angle = (offset / (total * spacing || 1)) * -14;
+      cNode.angle = 0;
       this.handRowNode.addChild(cNode);
 
       // 符箓栏点击区域匹配
@@ -315,7 +321,7 @@ export class LanternHUD extends Component {
       // 若被选中，画高亮金黄光圈
       if (isSel) {
         const sg = cNode.addComponent(Graphics);
-        sg.strokeColor = new Color(255, 215, 60, 230);
+        sg.strokeColor = new Color(222, 67, 56, 240);
         sg.lineWidth = 3;
         sg.roundRect(-cardW / 2 - 2, -cardH / 2 - 2, cardW + 4, cardH + 4, 9);
         sg.stroke();
@@ -347,137 +353,75 @@ export class LanternHUD extends Component {
 
   // 4. 右侧超大【驱邪/出牌】与【闪避】、【灯阵】大按钮
   private createActionButtons() {
-    const actionRoot = new Node('ActionButtons');
+    const actionRoot = new Node('SealActions');
     this.node.addChild(actionRoot);
 
-    // 超大【驱邪/出牌】主键（直径 130，留足内圈显示空间）
-    this.fireBtnNode = new Node('FireBtn');
-    this.fireBtnNode.addComponent(UITransform).setContentSize(130, 130);
-    this.fireBtnNode.setPosition(240, -420, 0);
+    this.fireBtnNode = new Node('DriveEvilBtn');
+    this.fireBtnNode.addComponent(UITransform).setContentSize(132, 118);
+    this.fireBtnNode.setPosition(245, -410, 0);
     actionRoot.addChild(this.fireBtnNode);
-
     const fg = this.fireBtnNode.addComponent(Graphics);
-    // 黄铜外环
-    fg.fillColor = new Color(45, 25, 15, 230);
-    fg.circle(0, 0, 65);
-    fg.fill();
-    fg.strokeColor = new Color(235, 185, 60);
-    fg.lineWidth = 4;
-    fg.circle(0, 0, 65);
-    fg.stroke();
-    // 内圈皮纹与精细金边
-    fg.fillColor = new Color(150, 32, 28);
-    fg.circle(0, 0, 54);
-    fg.fill();
-    fg.strokeColor = new Color(210, 155, 55, 180);
-    fg.lineWidth = 1.5;
-    fg.circle(0, 0, 54);
-    fg.stroke();
+    fg.fillColor = new Color(26, 25, 48, 235); fg.roundRect(-62, -54, 124, 108, 18); fg.fill();
+    fg.strokeColor = new Color(224, 180, 88); fg.lineWidth = 3; fg.roundRect(-62, -54, 124, 108, 18); fg.stroke();
+    fg.strokeColor = new Color(186, 50, 47); fg.lineWidth = 2;
+    fg.moveTo(-34, 26); fg.bezierCurveTo(-8, 42, 8, 10, 35, 30);
+    fg.moveTo(-31, 6); fg.bezierCurveTo(-7, -10, 12, 18, 33, 0);
+    fg.moveTo(-25, -22); fg.lineTo(26, -22); fg.stroke();
 
-    // 按钮中心提示文本，设置双行居中并开启自动缩小，彻底防溢出
-    const lblNode = new Node('FireLbl');
+    const lblNode = new Node('DriveEvilLabel');
     this.fireBtnNode.addChild(lblNode);
-    const btnUi = lblNode.addComponent(UITransform);
-    btnUi.setContentSize(96, 60);
+    lblNode.setPosition(0, -2, 0);
+    lblNode.addComponent(UITransform).setContentSize(96, 52);
     this.fireLabel = lblNode.addComponent(Label);
-    this.fireLabel.string = this.fmtBtnTxt('出牌放符');
-    this.fireLabel.fontSize = 16;
-    this.fireLabel.lineHeight = 20;
-    this.fireLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
-    this.fireLabel.verticalAlign = Label.VerticalAlign.CENTER;
-    this.fireLabel.overflow = Label.Overflow.SHRINK;
-    this.fireLabel.color = new Color(255, 240, 200);
+    this.fireLabel.string = '驱邪'; this.fireLabel.fontSize = 18; this.fireLabel.lineHeight = 22;
+    this.fireLabel.horizontalAlign = Label.HorizontalAlign.CENTER; this.fireLabel.verticalAlign = Label.VerticalAlign.CENTER;
+    this.fireLabel.overflow = Label.Overflow.SHRINK; this.fireLabel.color = new Color(255, 231, 175);
 
+    this.fireBtnNode.on(Node.EventType.TOUCH_START, () => this.fireBtnNode.setScale(0.94, 0.94, 1));
     this.fireBtnNode.on(Node.EventType.TOUCH_END, () => {
-      // 翻牌回弹触控反馈
-      tween(this.fireBtnNode)
-        .to(0.06, { scale: new Vec3(0.9, 0.9, 1) })
-        .to(0.08, { scale: new Vec3(1.0, 1.0, 1) })
-        .start();
-
-      if (this.onFireCombo) {
-        this.onFireCombo();
-      }
+      tween(this.fireBtnNode).to(0.08, { scale: new Vec3(1, 1, 1) }).start();
+      if (this.onFireCombo) this.onFireCombo();
     });
+    this.fireBtnNode.on(Node.EventType.TOUCH_CANCEL, () => this.fireBtnNode.setScale(1, 1, 1));
 
-    // 【闪避闪避】大按钮（直径 78）
-    this.rollBtnNode = new Node('RollBtn');
-    this.rollBtnNode.addComponent(UITransform).setContentSize(78, 78);
-    this.rollBtnNode.setPosition(260, -280, 0);
+    this.rollBtnNode = new Node('DodgeSealBtn');
+    this.rollBtnNode.addComponent(UITransform).setContentSize(82, 82);
+    this.rollBtnNode.setPosition(165, -315, 0);
     actionRoot.addChild(this.rollBtnNode);
-
     const rg = this.rollBtnNode.addComponent(Graphics);
-    rg.fillColor = new Color(55, 32, 18, 220);
-    rg.circle(0, 0, 39);
-    rg.fill();
-    rg.strokeColor = new Color(205, 160, 65);
-    rg.lineWidth = 2.5;
-    rg.circle(0, 0, 39);
-    rg.stroke();
+    rg.fillColor = new Color(19, 42, 58, 225); rg.roundRect(-38, -38, 76, 76, 16); rg.fill();
+    rg.strokeColor = new Color(130, 184, 180); rg.lineWidth = 2.5; rg.roundRect(-38, -38, 76, 76, 16); rg.stroke();
+    rg.strokeColor = new Color(230, 188, 102); rg.lineWidth = 2;
+    rg.moveTo(-18, 10); rg.bezierCurveTo(-2, 28, 15, 22, 19, 2);
+    rg.moveTo(-20, -10); rg.bezierCurveTo(-3, 5, 10, -2, 18, -18); rg.stroke();
+    const rollLbl = new Node('DodgeTxt'); this.rollBtnNode.addChild(rollLbl);
+    const rl = rollLbl.addComponent(Label); rl.string = '闪避'; rl.fontSize = 16; rl.color = new Color(228, 242, 225);
+    this.rollMaskNode = new Node('RollMask'); this.rollBtnNode.addChild(this.rollMaskNode); this.rollMaskNode.active = false;
+    this.rollBtnNode.on(Node.EventType.TOUCH_END, () => { if (this.onRoll) this.onRoll(); });
 
-    const rollLbl = new Node('RollTxt');
-    this.rollBtnNode.addChild(rollLbl);
-    const rl = rollLbl.addComponent(Label);
-    rl.string = '闪避';
-    rl.fontSize = 18;
-    rl.color = new Color(255, 235, 180);
-
-    this.rollMaskNode = new Node('RollMask');
-    this.rollBtnNode.addChild(this.rollMaskNode);
-    this.rollMaskNode.active = false;
-
-    this.rollBtnNode.on(Node.EventType.TOUCH_END, () => {
-      if (this.onRoll) this.onRoll();
-    });
-
-    // 【巡夜灯阵】金色治安官星徽大按钮（蓄满旋转呼吸发光）
-    this.kataBtnNode = new Node('KataBtn');
-    this.kataBtnNode.addComponent(UITransform).setContentSize(72, 72);
-    this.kataBtnNode.setPosition(130, -320, 0);
+    this.kataBtnNode = new Node('LanternArrayBtn');
+    this.kataBtnNode.addComponent(UITransform).setContentSize(82, 82);
+    this.kataBtnNode.setPosition(270, -270, 0);
     actionRoot.addChild(this.kataBtnNode);
-
     this.kataEnergyG = this.kataBtnNode.addComponent(Graphics);
     this.redrawKataBadge(0, 100);
-
-    this.kataBtnNode.on(Node.EventType.TOUCH_END, () => {
-      if (this.onTriggerKata) this.onTriggerKata();
-    });
+    this.kataBtnNode.on(Node.EventType.TOUCH_END, () => { if (this.onTriggerKata) this.onTriggerKata(); });
   }
 
   // 绘制灯阵徽章与能量外环
   redrawKataBadge(cur: number, max: number) {
-    const g = this.kataEnergyG;
-    g.clear();
-
-    const r = 36;
-    // 底槽
-    g.fillColor = new Color(30, 20, 15, 200);
-    g.circle(0, 0, r);
-    g.fill();
-
-    // 环形能量进度
-    const ratio = Math.min(1.0, cur / max);
-    g.strokeColor = new Color(255, 210, 50, 230);
-    g.lineWidth = 4;
-    g.circle(0, 0, r);
-    g.stroke();
-
-    // 治安官五角星
-    const starCol = ratio >= 1.0 ? new Color(255, 220, 60) : new Color(130, 105, 60);
-    TalismanRenderer.drawStarBadge(g, 0, 0, 22, starCol);
-
-    // 蓄满时启动脉冲缩放动效
+    const g = this.kataEnergyG; g.clear();
+    const ratio = Math.min(1, cur / max);
+    g.fillColor = new Color(16, 27, 52, 230); g.roundRect(-37, -37, 74, 74, 14); g.fill();
+    g.strokeColor = ratio >= 1 ? new Color(250, 209, 116) : new Color(118, 103, 81);
+    g.lineWidth = 3; g.roundRect(-37, -37, 74, 74, 14); g.stroke();
+    g.fillColor = ratio >= 1 ? new Color(255, 188, 84, 235) : new Color(115, 83, 55, 210);
+    g.moveTo(-13, 19); g.lineTo(13, 19); g.lineTo(18, -17); g.lineTo(-18, -17); g.close(); g.fill();
+    g.fillColor = new Color(255, 236, 173, ratio >= 1 ? 245 : 120); g.ellipse(0, 0, 12, 18); g.fill();
+    g.strokeColor = new Color(183, 55, 48); g.lineWidth = 1.8; g.moveTo(-8, 3); g.lineTo(8, -4); g.moveTo(-7, -6); g.lineTo(7, 7); g.stroke();
     Tween.stopAllByTarget(this.kataBtnNode);
-    if (ratio >= 1.0) {
-      tween(this.kataBtnNode)
-        .to(0.3, { scale: new Vec3(1.15, 1.15, 1) })
-        .to(0.3, { scale: new Vec3(1.0, 1.0, 1) })
-        .union()
-        .repeatForever()
-        .start();
-    } else {
-      this.kataBtnNode.setScale(1, 1, 1);
-    }
+    if (ratio >= 1) tween(this.kataBtnNode).to(0.28,{scale:new Vec3(1.12,1.12,1)}).to(0.28,{scale:new Vec3(1,1,1)}).union().repeatForever().start();
+    else this.kataBtnNode.setScale(1,1,1);
   }
 
   // 把发射按钮文字合理拆成两行，避免圆钮装不下挤出边界
@@ -548,7 +492,7 @@ export class LanternHUD extends Component {
     tableNode.setPosition(0, 30, 0);
     this.upgradeModalNode.addChild(tableNode);
     const tg = tableNode.addComponent(Graphics);
-    tg.fillColor = new Color(25, 60, 40);
+    tg.fillColor = new Color(20, 31, 58);
     tg.roundRect(-270, -220, 540, 440, 12);
     tg.fill();
     tg.strokeColor = new Color(215, 175, 70);
@@ -561,7 +505,7 @@ export class LanternHUD extends Component {
     titleNode.setPosition(0, 160, 0);
     tableNode.addChild(titleNode);
     const tl = titleNode.addComponent(Label);
-    tl.string = '—— 灵息巡夜师强化 ——';
+    tl.string = '—— 夜巡符契 ——';
     tl.fontSize = 24;
     tl.color = new Color(255, 230, 150);
   }
@@ -591,10 +535,10 @@ export class LanternHUD extends Component {
 
       // 符箓造型大按钮
       const cg = cardNode.addComponent(Graphics);
-      cg.fillColor = new Color(248, 243, 230);
+      cg.fillColor = new Color(241, 224, 176);
       cg.roundRect(-65, -110, 130, 220, 8);
       cg.fill();
-      cg.strokeColor = new Color(195, 155, 75);
+      cg.strokeColor = new Color(173, 52, 45);
       cg.lineWidth = 2.5;
       cg.roundRect(-65, -110, 130, 220, 8);
       cg.stroke();
