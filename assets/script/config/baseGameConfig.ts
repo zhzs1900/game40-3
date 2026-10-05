@@ -4,7 +4,7 @@
  */
 export const baseGameConfig = {
   /** 游戏标题，配了之后封面就会展示，留空或不填则不显示 */
-  gameTitle: '游戏名称测试',
+  gameTitle: '符灯夜行',
   /** 封面是否显示健康游戏忠告，默认 false 不显示 */
   showAdvice: true,
   /** 基础框架的调试入口及关卡总数。 */

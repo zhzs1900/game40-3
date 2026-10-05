@@ -4,7 +4,7 @@ import { BasePageGameController } from './common/BasePageGameController';
 import { CoverPage } from './common/CoverPage';
 import { GameDialogs } from './common/GameDialogs';
 import { GameDebug } from './common/GameDebug';
-import { GameScene } from './game/GameScene';
+import { LanternNightScene } from './game/LanternNightScene';
 import { GameAudio } from './framework/common/GameAudio';
 import { GameProgress } from './common/services/GameProgress';
 import type { GameResult } from './common/services/GameProgress';
@@ -19,7 +19,7 @@ export class StarterGame extends BasePageGameController {
   private audio!: GameAudio;
   private ui!: GameUI;
   private debug!: GameDebug;
-  private gameScene: GameScene | null = null;
+  private gameScene: LanternNightScene | null = null;
   private stage!: Node;
   private cover!: CoverPage;
   private dialogs!: GameDialogs;
@@ -73,7 +73,7 @@ export class StarterGame extends BasePageGameController {
     if (!this.progress.select(level, true)) { return; }
     const stage = this.createStage('PlayPage');
     this.setState(BaseGameState.Playing);
-    this.gameScene = stage.addComponent(GameScene);
+    this.gameScene = stage.addComponent(LanternNightScene);
     this.gameScene.initialize(this.ui, level, result => this.finishGame(result),
       () => this.dialogs.showGameMenu(() => this.showCover()));
     this.debug.render(stage);
