@@ -76,82 +76,71 @@ export class NightTownWorld extends Component {
 
   // 绘制地面底色与细密荒野纹理
   private drawTerrainBase(level: number) {
-    const bgNode = new Node('Terrain');
-    this.bgGraphicsRoot.addChild(bgNode);
-    const g = bgNode.addComponent(Graphics);
-    g.clear();
-
-    const w = 720;
-    const h = 1280;
-
-    // 根据关卡色调区分地貌
-    let groundCol = new Color(215, 175, 120);
-    switch (level) {
-      case 1: groundCol = new Color(212, 170, 118); break; // 边境车站：黄土沙地
-      case 2: groundCol = new Color(196, 152, 102); break; // 酒馆街：压实泥路与马车辙印
-      case 3: groundCol = new Color(82, 74, 68); break;    // 废弃矿区：深灰暗褐岩石
-      case 4: groundCol = new Color(185, 92, 58); break;   // 峡谷铁路：红褐色峡谷绝壁
-      case 5: groundCol = new Color(228, 188, 112); break; // 淘金小镇：浅金沙滩
-      case 6: groundCol = new Color(68, 72, 78); break;    // 蒸汽工厂：冷铁深灰地砖
-      case 7: groundCol = new Color(28, 62, 42); break;    // 亡命赌场：复古绿绒符案呢
-      case 8: groundCol = new Color(42, 28, 38); break;    // 灵息王城：深邃紫灰石板
+    const bgNode=new Node('BlueStoneNight');this.bgGraphicsRoot.addChild(bgNode);
+    const g=bgNode.addComponent(Graphics);g.clear();
+    const palettes=[
+      new Color(26,38,65),new Color(22,35,60),new Color(20,31,54),new Color(28,38,64),
+      new Color(30,42,61),new Color(24,36,58),new Color(32,35,61),new Color(18,25,48)
+    ];
+    g.fillColor=palettes[Math.max(0,Math.min(7,level-1))];g.rect(-360,-640,720,1280);g.fill();
+    // staggered blue-stone paving: visible joints without simple repeated rectangles
+    g.strokeColor=new Color(79,96,126,95);g.lineWidth=1.2;
+    for(let y=-610,row=0;y<610;y+=58,row++){
+      const offset=row%2===0?-360:-320;
+      for(let x=offset;x<360;x+=82){
+        g.moveTo(x+4,y+4);g.bezierCurveTo(x+28,y-2,x+55,y+2,x+78,y+5);
+        g.lineTo(x+76,y+50);g.bezierCurveTo(x+51,y+55,x+26,y+51,x+3,y+48);g.close();
+      }
+    } g.stroke();
+    // evil cracks become stronger with level
+    g.strokeColor=new Color(103,52,113,80+level*10);g.lineWidth=2;
+    for(let i=0;i<7+level;i++){
+      const x=-310+((i*97)%620), y=-500+((i*173)%980);
+      g.moveTo(x,y);g.lineTo(x+14,y+19);g.lineTo(x+5,y+35);g.lineTo(x+24,y+52);g.stroke();
     }
-
-    g.fillColor = groundCol;
-    g.rect(-w / 2, -h / 2, w, h);
-    g.fill();
-
-    // 地表细密砂石颗粒与风化纹理
-    g.fillColor = new Color(0, 0, 0, 25);
-    for (let i = 0; i < 50; i++) {
-      const rx = (Math.random() - 0.5) * (w - 60);
-      const ry = (Math.random() - 0.5) * (h - 180);
-      g.circle(rx, ry, 1.5 + Math.random() * 3.5);
-      g.fill();
+    // warm pools of lantern light on the road
+    for(let i=0;i<4;i++){
+      const x=-250+i*165,y=-420+(i%2)*520;
+      g.fillColor=new Color(245,177,79,22);g.ellipse(x,y,72,42);g.fill();
+      g.fillColor=new Color(246,199,111,16);g.ellipse(x,y,46,28);g.fill();
     }
-
-    // 车辙印暗痕
-    g.strokeColor = new Color(0, 0, 0, 18);
-    g.lineWidth = 4;
-    g.moveTo(-120, -550);
-    g.bezierCurveTo(-115, -200, -125, 200, -118, 550);
-    g.stroke();
-    g.moveTo(-50, -550);
-    g.bezierCurveTo(-45, -200, -55, 200, -48, 550);
-    g.stroke();
   }
 
   // 绘制各个关卡的专属特色矢量场景
   private drawSceneTheme(level: number) {
-    const dNode = new Node('ThemeVisual');
-    this.decoRoot.addChild(dNode);
-    const g = dNode.addComponent(Graphics);
-
-    switch (level) {
-      case 1:
-        this.drawStation(g);
-        break;
-      case 2:
-        this.drawSaloon(g);
-        break;
-      case 3:
-        this.drawMine(g);
-        break;
-      case 4:
-        this.drawCanyon(g);
-        break;
-      case 5:
-        this.drawGoldTown(g);
-        break;
-      case 6:
-        this.drawFactory(g);
-        break;
-      case 7:
-        this.drawCasino(g);
-        break;
-      case 8:
-        this.drawPalace(g);
-        break;
+    const dNode=new Node('NightTownTheme');this.decoRoot.addChild(dNode);
+    const g=dNode.addComponent(Graphics);
+    // roof silhouettes and eaves frame the combat lane
+    g.fillColor=new Color(13,22,39,225);
+    g.moveTo(-360,430);g.lineTo(-285,500);g.lineTo(-205,445);g.lineTo(-155,490);g.lineTo(-115,455);g.lineTo(-115,640);g.lineTo(-360,640);g.close();g.fill();
+    g.moveTo(360,390);g.lineTo(290,475);g.lineTo(225,440);g.lineTo(165,500);g.lineTo(115,455);g.lineTo(115,640);g.lineTo(360,640);g.close();g.fill();
+    g.strokeColor=new Color(91,65,61,190);g.lineWidth=5;g.moveTo(-345,420);g.lineTo(-130,420);g.moveTo(130,420);g.lineTo(345,420);g.stroke();
+    // each level adds a recognizable old-town landmark
+    if(level===1||level===6){
+      g.fillColor=new Color(70,55,56);g.roundRect(-72,255,144,105,7);g.fill();
+      g.strokeColor=new Color(177,51,45);g.lineWidth=2;g.roundRect(-65,262,130,91,5);g.stroke();
+      for(let x=-45;x<=45;x+=30){g.moveTo(x,270);g.lineTo(x,345);}g.stroke();
+    } else if(level===2||level===7){
+      g.strokeColor=new Color(205,167,88);g.lineWidth=3;g.moveTo(-170,340);g.bezierCurveTo(-60,395,62,300,175,350);g.stroke();
+      for(let x=-150;x<=150;x+=60){g.fillColor=new Color(137,45,49);g.ellipse(x,335+(x%120===0?18:0),15,20);g.fill();}
+    } else if(level===3){
+      g.fillColor=new Color(23,30,44);g.circle(-190,300,62);g.fill();g.strokeColor=new Color(96,112,135);g.lineWidth=5;g.circle(-190,300,54);g.stroke();
+      g.strokeColor=new Color(155,49,47);g.lineWidth=2;g.moveTo(-225,335);g.lineTo(-155,265);g.moveTo(-155,335);g.lineTo(-225,265);g.stroke();
+    } else if(level===4){
+      g.fillColor=new Color(73,66,76);g.moveTo(-300,250);g.lineTo(300,250);g.lineTo(235,330);g.lineTo(-235,330);g.close();g.fill();
+      g.strokeColor=new Color(200,161,84);g.lineWidth=2;for(let x=-220;x<=220;x+=55){g.moveTo(x,260);g.lineTo(x+18,320);}g.stroke();
+    } else if(level===5){
+      g.fillColor=new Color(76,52,48);g.roundRect(-150,300,300,115,7);g.fill();g.strokeColor=new Color(205,165,87);g.lineWidth=2;g.roundRect(-140,310,280,95,5);g.stroke();
+      g.fillColor=new Color(36,31,41);g.moveTo(-185,410);g.lineTo(0,500);g.lineTo(185,410);g.close();g.fill();
+    } else {
+      g.fillColor=new Color(54,47,60);g.roundRect(-210,280,420,160,9);g.fill();
+      g.fillColor=new Color(28,25,37);g.moveTo(-250,440);g.lineTo(0,555);g.lineTo(250,440);g.close();g.fill();
+      g.strokeColor=new Color(178,50,46);g.lineWidth=3;g.moveTo(-42,405);g.lineTo(0,455);g.lineTo(42,405);g.stroke();
+    }
+    // cinnabar seal strips on walls
+    for(let x=-300;x<=300;x+=120){
+      g.fillColor=new Color(223,205,160,215);g.roundRect(x,455,25,58,2);g.fill();
+      g.strokeColor=new Color(177,48,44);g.lineWidth=1.5;g.moveTo(x+5,499);g.bezierCurveTo(x+19,490,x+3,475,x+19,463);g.stroke();
     }
   }
 
@@ -559,68 +548,16 @@ export class NightTownWorld extends Component {
 
   // 构建各个关卡的专属动态小道具（风滚草、摇晃油灯、百叶门、蒸汽喷雾）
   private setupDynamicProps(level: number) {
-    // 1. 荒漠风滚草（随风自转并在地面颠簸起伏前进）
-    if (level === 1 || level === 2 || level === 4 || level === 5) {
-      this.tumbleNode = new Node('Tumbleweed');
-      this.tumbleNode.setPosition(-340, -180, 0);
-      this.dynamicRoot.addChild(this.tumbleNode);
-
-      const tg = this.tumbleNode.addComponent(Graphics);
-      // 缠绕荆棘球体
-      tg.strokeColor = new Color(135, 95, 52);
-      tg.lineWidth = 1.8;
-      for (let i = 0; i < 7; i++) {
-        const rad = (i * Math.PI) / 3.5;
-        tg.ellipse(0, 0, 14, 8);
-        tg.stroke();
-      }
-    }
-
-    // 2. 酒馆摇曳油灯（微风轻摇，暖黄烛光光圈呼吸闪烁）
-    if (level === 1 || level === 2) {
-      this.lanternNode = new Node('Lantern');
-      this.lanternNode.setPosition(140, 200, 0);
-      this.dynamicRoot.addChild(this.lanternNode);
-
-      const lg = this.lanternNode.addComponent(Graphics);
-      // 黄铜防风提梁灯架
-      lg.strokeColor = new Color(185, 135, 45);
-      lg.lineWidth = 1.5;
-      lg.rect(-6, -10, 12, 18);
-      lg.stroke();
-      // 内部跳动黄色灯芯火苗
-      lg.fillColor = new Color(255, 220, 70);
-      lg.ellipse(0, -2, 3, 5);
-      lg.fill();
-      // 柔和光晕
-      lg.fillColor = new Color(255, 210, 60, 80);
-      lg.circle(0, -2, 22);
-      lg.fill();
-    }
-
-    // 3. 酒馆摇摆门（百叶扇动）
-    if (level === 2) {
-      this.doorsNode = new Node('SaloonDoors');
-      this.doorsNode.setPosition(0, 360, 0);
-      this.dynamicRoot.addChild(this.doorsNode);
-
-      const dg = this.doorsNode.addComponent(Graphics);
-      // 左扇与右扇百叶门
-      dg.fillColor = new Color(130, 80, 42);
-      dg.roundRect(-42, -25, 38, 50, 3);
-      dg.roundRect(4, -25, 38, 50, 3);
-      dg.fill();
-      // 百叶木缝
-      dg.strokeColor = new Color(75, 42, 20);
-      dg.lineWidth = 1.5;
-      for (let y = -20; y <= 20; y += 8) {
-        dg.moveTo(-40, y);
-        dg.lineTo(-6, y);
-        dg.moveTo(6, y);
-        dg.lineTo(40, y);
-      }
-      dg.stroke();
-    }
+    // swaying lantern
+    this.lanternNode=new Node('SwayLantern');this.lanternNode.setPosition(level%2===0?-245:245,355,0);this.dynamicRoot.addChild(this.lanternNode);
+    const lg=this.lanternNode.addComponent(Graphics);lg.fillColor=new Color(121,43,43);lg.roundRect(-14,-18,28,36,7);lg.fill();
+    lg.strokeColor=new Color(222,177,85);lg.lineWidth=2;lg.moveTo(0,24);lg.lineTo(0,17);lg.roundRect(-14,-18,28,36,7);lg.stroke();
+    lg.fillColor=new Color(255,199,91,210);lg.ellipse(0,0,8,13);lg.fill();
+    // drifting prayer ribbon
+    this.tumbleNode=new Node('DriftTalisman');this.tumbleNode.setPosition(-300,-80,0);this.dynamicRoot.addChild(this.tumbleNode);
+    const tg=this.tumbleNode.addComponent(Graphics);tg.fillColor=new Color(226,211,170,180);tg.moveTo(-4,15);tg.lineTo(5,14);tg.lineTo(3,-15);tg.lineTo(-6,-13);tg.close();tg.fill();
+    tg.strokeColor=new Color(174,49,45);tg.lineWidth=1.5;tg.moveTo(-2,8);tg.bezierCurveTo(4,3,-3,-3,2,-9);tg.stroke();
+    this.doorsNode=undefined;this.steamNode=undefined;
   }
 
   public isPaused: boolean = false;
@@ -675,171 +612,38 @@ export class NightTownWorld extends Component {
 
   // 战术掩体布局：摆放坚固符封木柜与香炉
   private spawnObstacles(level: number) {
-    const positions = [
-      { x: -160, y: 150, explosive: false },
-      { x: 160, y: 150, explosive: false },
-      { x: -180, y: -150, explosive: true },
-      { x: 180, y: -150, explosive: false },
-      { x: 0, y: 0, explosive: true },
-    ];
-
-    for (let i = 0; i < positions.length; i++) {
-      const p = positions[i];
-      const boxNode = new Node(`Obstacle_${i}`);
-      boxNode.setPosition(p.x, p.y, 0);
-      this.obstacleRoot.addChild(boxNode);
-
-      const isExplosive = p.explosive;
-      this.drawBoxShape(boxNode, isExplosive);
-
-      this.obstacles.push({
-        node: boxNode,
-        pos: new Vec3(p.x, p.y, 0),
-        width: 44,
-        height: 44,
-        isExplosive,
-        hp: isExplosive ? 30 : 60,
-      });
+    const count=4+Math.min(3,Math.floor(level/2));
+    for(let i=0;i<count;i++){
+      const n=new Node(i%3===0?'IncenseBurner':'SealCabinet');
+      const x=-235+((i*151)%470), y=-260+((i*213)%560);
+      n.setPosition(x,y,0);this.obstacleRoot.addChild(n);
+      const explosive=i%3===0;this.drawBoxShape(n,explosive);
+      this.obstacles.push({node:n,pos:new Vec3(x,y,0),width:explosive?44:58,height:explosive?48:58,isExplosive:explosive,hp:explosive?55:85+level*5});
+    }
+    // ancient well as a solid-looking environmental cover without adding a new collision system
+    if(level===3||level===8){
+      const w=new Node('OldWell');w.setPosition(-190,120,0);this.obstacleRoot.addChild(w);
+      const g=w.addComponent(Graphics);g.fillColor=new Color(48,52,64);g.ellipse(0,0,48,24);g.fill();g.strokeColor=new Color(112,124,143);g.lineWidth=5;g.ellipse(0,0,43,20);g.stroke();
+      g.fillColor=new Color(14,20,32);g.ellipse(0,2,32,12);g.fill();g.strokeColor=new Color(111,54,118,150);g.lineWidth=2;g.moveTo(-18,2);g.bezierCurveTo(-5,11,7,-8,20,3);g.stroke();
     }
   }
 
   // 精细绘制符封木柜与带危险骷髅标的香炉（绝非简单几何图形）
   private drawBoxShape(node: Node, isExplosive: boolean) {
-    const g = node.addComponent(Graphics);
-    g.clear();
-
-    const sz = 44;
-    const half = sz / 2;
-
-    if (!isExplosive) {
-      // 传统古镇夜巡重型做旧实符封木柜
-      // 1. 底层木板
-      g.fillColor = new Color(130, 80, 42);
-      g.roundRect(-half, -half, sz, sz, 4);
-      g.fill();
-
-      // 2. 天然原木纹理与木板深色接缝
-      g.strokeColor = new Color(75, 42, 20);
-      g.lineWidth = 1.8;
-      g.moveTo(-half, -half / 3);
-      g.lineTo(half, -half / 3);
-      g.moveTo(-half, half / 3);
-      g.lineTo(half, half / 3);
-      g.stroke();
-
-      // 细腻天然木纹弧线与木结轮廓
-      g.strokeColor = new Color(105, 62, 32, 140);
-      g.lineWidth = 1.0;
-      g.moveTo(-half + 6, -half + 5);
-      g.bezierCurveTo(-half + 16, -half + 9, half - 10, -half + 4, half - 4, -half + 7);
-      g.stroke();
-      g.moveTo(-half + 4, 3);
-      g.bezierCurveTo(-half + 20, 7, half - 12, 1, half - 5, 5);
-      g.stroke();
-      // 木结
-      g.fillColor = new Color(85, 48, 24);
-      g.ellipse(6, -half / 3 + 6, 2.5, 1.8);
-      g.fill();
-
-      // 3. X型外层加固厚木条与阴影
-      g.strokeColor = new Color(60, 32, 16);
-      g.lineWidth = 3.5;
-      g.moveTo(-half + 4, -half + 4);
-      g.lineTo(half - 4, half - 4);
-      g.moveTo(-half + 4, half - 4);
-      g.lineTo(half - 4, -half + 4);
-      g.stroke();
-      g.strokeColor = new Color(105, 60, 30);
-      g.lineWidth = 2.2;
-      g.moveTo(-half + 4, -half + 4);
-      g.lineTo(half - 4, half - 4);
-      g.moveTo(-half + 4, half - 4);
-      g.lineTo(half - 4, -half + 4);
-      g.stroke();
-
-      // 4. 四角加固生锈黑铁铁皮角码（带4颗凸起银白高光圆铆钉）
-      g.fillColor = new Color(48, 52, 58);
-      g.rect(-half, half - 7, 7, 7);
-      g.rect(half - 7, half - 7, 7, 7);
-      g.rect(-half, -half, 7, 7);
-      g.rect(half - 7, -half, 7, 7);
-      g.fill();
-
-      // 铆钉
-      g.fillColor = new Color(210, 215, 225);
-      g.circle(-half + 3.5, half - 3.5, 1.2);
-      g.circle(half - 3.5, half - 3.5, 1.2);
-      g.circle(-half + 3.5, -half + 3.5, 1.2);
-      g.circle(half - 3.5, -half + 3.5, 1.2);
-      g.fill();
-
-      // 5. 箱体黑色模板喷字“TNT”
-      g.fillColor = new Color(25, 20, 18, 160);
-      g.rect(-10, -3, 20, 6);
-      g.fill();
+    const g=node.addComponent(Graphics);g.clear();
+    if(!isExplosive){
+      g.fillColor=new Color(80,58,49);g.roundRect(-29,-27,58,54,5);g.fill();
+      g.strokeColor=new Color(40,34,39);g.lineWidth=4;g.roundRect(-29,-27,58,54,5);g.stroke();
+      g.strokeColor=new Color(147,103,66);g.lineWidth=2;g.moveTo(-23,14);g.lineTo(23,14);g.moveTo(-23,-12);g.lineTo(23,-12);g.stroke();
+      g.fillColor=new Color(224,208,165);g.roundRect(-8,-21,16,42,2);g.fill();
+      g.strokeColor=new Color(177,49,44);g.lineWidth=1.8;g.moveTo(-4,13);g.bezierCurveTo(5,7,-5,-2,4,-10);g.moveTo(-5,-14);g.lineTo(5,-14);g.stroke();
+      g.fillColor=new Color(202,158,78);g.circle(-21,19,2);g.circle(21,19,2);g.circle(-21,-19,2);g.circle(21,-19,2);g.fill();
     } else {
-      // 红色烈性朱砂圆桶（弧形鼓腰桶板、双重铸铁铁箍与嘶嘶燃烧引信）
-      // 1. 鼓腰木桶身
-      g.fillColor = new Color(195, 36, 36);
-      g.moveTo(-half + 3, -half);
-      g.bezierCurveTo(-half - 3, 0, -half - 3, 0, -half + 3, half);
-      g.lineTo(half - 3, half);
-      g.bezierCurveTo(half + 3, 0, half + 3, 0, half - 3, -half);
-      g.close();
-      g.fill();
-
-      // 2. 上下双道粗犷黑铁铁箍与黄铜铆钉
-      g.fillColor = new Color(38, 40, 45);
-      g.rect(-half - 1, -half + 6, sz + 2, 4);
-      g.rect(-half - 1, half - 10, sz + 2, 4);
-      g.fill();
-      // 铁箍上的固定黄铜铆钉
-      g.fillColor = new Color(230, 185, 60);
-      g.circle(-8, -half + 8, 1.0);
-      g.circle(0, -half + 8, 1.0);
-      g.circle(8, -half + 8, 1.0);
-      g.circle(-8, half - 8, 1.0);
-      g.circle(0, half - 8, 1.0);
-      g.circle(8, half - 8, 1.0);
-      g.fill();
-
-      // 3. 黄黑相间危险警戒条纹
-      g.strokeColor = new Color(245, 210, 45);
-      g.lineWidth = 2.5;
-      g.moveTo(-half + 2, -1);
-      g.lineTo(half - 2, -1);
-      g.stroke();
-
-      // 4. 桶身精致白色骷髅与交叉骨标识
-      g.fillColor = new Color(255, 255, 255);
-      g.circle(0, 5, 4.5); // 颅骨
-      g.fill();
-      g.strokeColor = new Color(255, 255, 255);
-      g.lineWidth = 1.5;
-      g.moveTo(-5, -3);
-      g.lineTo(5, 3);
-      g.moveTo(5, -3);
-      g.lineTo(-5, 3);
-      g.stroke();
-      // 眼窝
-      g.fillColor = new Color(20, 20, 20);
-      g.circle(-1.8, 5, 1.1);
-      g.circle(1.8, 5, 1.1);
-      g.fill();
-
-      // 5. 顶部燃烧冒火花的扭曲麻绳引信
-      g.strokeColor = new Color(175, 130, 75);
-      g.lineWidth = 1.8;
-      g.moveTo(0, half);
-      g.bezierCurveTo(4, half + 5, 1, half + 10, 5, half + 13);
-      g.stroke();
-      // 引线顶端火花
-      g.fillColor = new Color(255, 225, 60);
-      g.circle(5, half + 13, 2.5);
-      g.fill();
-      g.fillColor = new Color(255, 70, 20);
-      g.circle(5, half + 13, 1.2);
-      g.fill();
+      g.fillColor=new Color(77,64,58);g.moveTo(-18,-20);g.lineTo(18,-20);g.lineTo(22,13);g.lineTo(14,23);g.lineTo(-14,23);g.lineTo(-22,13);g.close();g.fill();
+      g.strokeColor=new Color(191,147,72);g.lineWidth=3;g.moveTo(-18,-10);g.lineTo(18,-10);g.moveTo(-18,12);g.lineTo(18,12);g.stroke();
+      g.fillColor=new Color(174,48,44);g.roundRect(-10,-7,20,18,3);g.fill();
+      g.strokeColor=new Color(238,196,105);g.lineWidth=1.5;g.moveTo(-5,6);g.lineTo(5,-2);g.moveTo(-4,-3);g.lineTo(5,6);g.stroke();
+      g.fillColor=new Color(245,175,73,160);g.ellipse(0,27,8,11);g.fill();
     }
   }
 
