@@ -41,6 +41,8 @@ export class SpiritActor extends Component {
   private animTimer: number = 0;
   private prepShoot: number = 0;
   private dustTimer: number = 0;
+  private residualSlowTimer: number = 0;
+  private residualSlowFactor: number = 1;
 
   // 驱邪回调（通知 LanternNightScene 投射飞符）
   public onEnemyFire?: (fromPos: Vec3, toPos: Vec3, dmg: number) => void;
@@ -192,607 +194,102 @@ export class SpiritActor extends Component {
 
   // 绘制敌人双腿（巡夜师裤、皮套裤、护膝、加固马靴与马刺）
   private drawEnemyLeg(node: Node, isLeft: boolean) {
-    const g = node.getComponent(Graphics) || node.addComponent(Graphics);
-    g.clear();
-
-    const sign = isLeft ? -1 : 1;
-
+    const g = node.getComponent(Graphics) || node.addComponent(Graphics); g.clear();
+    const sx = isLeft ? -1 : 1;
     if (this.kind === 'brawler') {
-      // 兽祟：撕裂毛边深棕皮裤，膝盖绑着带尖铜铆钉的硬皮护膝
-      g.fillColor = new Color(65, 38, 22);
-      g.roundRect(-3.5, -12, 7, 14, 2);
-      g.fill();
-
-      // 膝部粗硬皮垫
-      g.fillColor = new Color(95, 55, 30);
-      g.roundRect(-4, -6, 8, 6, 2);
-      g.fill();
-      // 护膝铜铆钉
-      g.fillColor = new Color(225, 180, 60);
-      g.circle(sign * 1.5, -3, 1.2);
-      g.fill();
-
-      // 沾满尘土的厚底粗皮靴
-      g.fillColor = new Color(42, 25, 15);
-      g.roundRect(-4, -18, 8, 7, 2);
-      g.fill();
-      // 靴底防滑橡胶齿
-      g.fillColor = new Color(20, 12, 8);
-      g.rect(-4, -19, 8, 1.8);
-      g.fill();
+      g.fillColor = new Color(47, 43, 55); g.moveTo(-5,-2); g.lineTo(4,-4); g.lineTo(7,-15); g.lineTo(1,-20); g.lineTo(-7,-14); g.close(); g.fill();
+      g.fillColor = new Color(101, 86, 72); g.moveTo(sx*2,-15); g.lineTo(sx*10,-21); g.lineTo(sx*4,-19); g.close(); g.fill();
+      g.strokeColor = new Color(169,57,51); g.lineWidth=1.5; g.moveTo(-3,-7); g.lineTo(3,-11); g.stroke();
+    } else if (this.kind === 'gunner') {
+      g.fillColor = new Color(71, 82, 111, 130); g.moveTo(-5,0); g.bezierCurveTo(-8,-8,-5,-16,-2,-21); g.lineTo(2,-21); g.bezierCurveTo(6,-15,7,-7,5,0); g.close(); g.fill();
+      g.strokeColor = new Color(219,188,115,150); g.lineWidth=1; g.moveTo(-4,-11); g.bezierCurveTo(0,-14,3,-8,5,-15); g.stroke();
     } else if (this.kind === 'shotgunner') {
-      // 纸伞妖：生铁板护胫与绑带，沉重厚钢头靴
-      g.fillColor = new Color(55, 60, 65);
-      g.roundRect(-4, -12, 8, 14, 2);
-      g.fill();
-
-      // 正面生铁护胫板
-      g.fillColor = new Color(110, 115, 125);
-      g.roundRect(-3.5, -10, 7, 10, 1.5);
-      g.fill();
-      // 绑带与螺栓
-      g.strokeColor = new Color(30, 32, 36);
-      g.lineWidth = 1.0;
-      g.moveTo(-3.5, -4);
-      g.lineTo(3.5, -4);
-      g.stroke();
-      g.fillColor = new Color(190, 195, 205);
-      g.circle(0, -7, 1.2);
-      g.fill();
-
-      // 铁头厚底重甲靴
-      g.fillColor = new Color(35, 38, 42);
-      g.roundRect(-4.5, -18, 9, 7, 2);
-      g.fill();
-      g.fillColor = new Color(140, 145, 155);
-      g.roundRect(sign > 0 ? 0 : -4.5, -18, 4.5, 3, 1); // 钢头反光
-      g.fill();
+      g.fillColor = new Color(226, 216, 183); g.moveTo(-5,0); g.lineTo(5,0); g.lineTo(4,-17); g.lineTo(-4,-17); g.close(); g.fill();
+      g.strokeColor = new Color(151,48,44); g.lineWidth=1.4; g.moveTo(-4,-6); g.lineTo(4,-9); g.moveTo(-4,-13); g.lineTo(4,-15); g.stroke();
+      g.fillColor = new Color(42,35,48); g.roundRect(-5,-20,10,4,1); g.fill();
     } else if (this.kind === 'bomber') {
-      // 爆符傀儡：炭灰煤屑连体工装裤腿，短皮靴插着备用导火索
-      g.fillColor = new Color(50, 52, 58);
-      g.roundRect(-3.5, -12, 7, 14, 2);
-      g.fill();
-
-      // 翻折短工装靴
-      g.fillColor = new Color(75, 45, 25);
-      g.roundRect(-4, -17, 8, 6, 2);
-      g.fill();
-      // 靴边插着一小段白色导火索
-      if (isLeft) {
-        g.strokeColor = new Color(230, 220, 200);
-        g.lineWidth = 1.2;
-        g.moveTo(-4, -12);
-        g.lineTo(-7, -8);
-        g.stroke();
-      }
+      g.fillColor = new Color(205, 190, 153); g.moveTo(-4,0); g.lineTo(5,-2); g.lineTo(3,-18); g.lineTo(-6,-15); g.close(); g.fill();
+      g.strokeColor = new Color(184,51,45); g.lineWidth=2; g.moveTo(-4,-4); g.lineTo(4,-14); g.moveTo(3,-5); g.lineTo(-4,-13); g.stroke();
     } else {
-      // 双枪游魂：深蓝巡夜师斜纹裤，枪套绑腿绳圈，尖头皮马靴与银色马刺
-      g.fillColor = new Color(38, 48, 62);
-      g.roundRect(-3.5, -12, 7, 14, 2);
-      g.fill();
-
-      // 大腿系枪套牛皮绑绳
-      g.strokeColor = new Color(85, 48, 25);
-      g.lineWidth = 1.2;
-      g.moveTo(-3.5, -3);
-      g.lineTo(3.5, -3);
-      g.stroke();
-
-      // 古镇夜巡尖头做旧马靴
-      g.fillColor = new Color(60, 32, 18);
-      g.roundRect(-4, -18, 8, 7, 2);
-      g.fill();
-      // 翘鞋尖
-      g.ellipse(sign * 2.5, -16.5, 3.5, 2.5);
-      g.fill();
-
-      // 脚后跟银色小马刺
-      g.strokeColor = new Color(220, 225, 235);
-      g.lineWidth = 1.2;
-      g.circle(-sign * 3.5, -16, 2.2);
-      g.stroke();
+      g.fillColor = new Color(56, 41, 65); g.roundRect(-4,-15,8,16,3); g.fill();
+      g.fillColor = new Color(186,56,48); g.rect(-4,-8,8,3); g.fill();
+      g.fillColor = new Color(29,27,35); g.roundRect(-5,-20,10,6,2); g.fill();
     }
   }
 
   // 绘制敌人躯干（彻底告别单一色块，丰富呈现不同职业装束）
   private drawEnemyTorso(node: Node) {
-    const g = node.getComponent(Graphics) || node.addComponent(Graphics);
-    g.clear();
-
-    if (this.kind === 'brawler') {
-      // 兽祟：袒胸深褐粗麻衬衣，露出胸口肌肉纹理与横贯前胸的刀疤，扎红色大腰封
-      g.fillColor = new Color(130, 85, 55);
-      g.roundRect(-10, -6, 20, 24, 3);
-      g.fill();
-
-      // 敞开衣领露出小麦色胸膛
-      g.fillColor = new Color(205, 145, 110);
-      g.moveTo(-4, 18);
-      g.lineTo(4, 18);
-      g.lineTo(0, 4);
-      g.close();
-      g.fill();
-
-      // 胸前粉红陈年刀伤痕
-      g.strokeColor = new Color(160, 60, 60);
-      g.lineWidth = 1.5;
-      g.moveTo(-3, 14);
-      g.lineTo(2, 6);
-      g.stroke();
-
-      // 鲜红宽大扎腰腰封（Sash）
-      g.fillColor = new Color(180, 35, 35);
-      g.rect(-10.5, -5, 21, 8);
-      g.fill();
-
-      // 外扎带方扣的宽皮带
-      g.fillColor = new Color(55, 30, 15);
-      g.rect(-10, -3, 20, 4);
-      g.fill();
-      g.strokeColor = new Color(225, 185, 60);
-      g.lineWidth = 1.2;
-      g.rect(-3, -4, 6, 6);
-      g.stroke();
-
-      // 腰侧挂磨刀石袋与备用匕首鞘
-      g.fillColor = new Color(85, 45, 25);
-      g.roundRect(-12, -4, 3.5, 9, 1);
-      g.fill();
-    } else if (this.kind === 'shotgunner') {
-      // 纸伞妖：沉厚生铁铸造护胸甲（锻造锤击纹、加固边缘、反光重螺母）、护颈与护肩
-      g.fillColor = new Color(60, 65, 72);
-      g.roundRect(-12, -6, 24, 25, 4);
-      g.fill();
-
-      // 金属高领护喉圈（Gorget）
-      g.fillColor = new Color(85, 90, 100);
-      g.moveTo(-8, 19);
-      g.lineTo(8, 19);
-      g.lineTo(6, 13);
-      g.lineTo(-6, 13);
-      g.close();
-      g.fill();
-
-      // 厚胸甲加固折棱与中央龙骨线
-      g.strokeColor = new Color(35, 38, 45);
-      g.lineWidth = 1.5;
-      g.moveTo(0, 15);
-      g.lineTo(0, -4);
-      g.stroke();
-
-      // 四角重型加固圆铆钉
-      g.fillColor = new Color(195, 200, 210);
-      g.circle(-8, 12, 1.8);
-      g.circle(8, 12, 1.8);
-      g.circle(-8, -1, 1.8);
-      g.circle(8, -1, 1.8);
-      g.fill();
-
-      // 腹部三联装红色大号霰弹弹药袋
-      g.fillColor = new Color(75, 42, 22);
-      g.roundRect(-9, -7, 18, 5, 1.5);
-      g.fill();
-      g.fillColor = new Color(225, 45, 40);
-      g.circle(-5, -4.5, 1.4);
-      g.circle(0, -4.5, 1.4);
-      g.circle(5, -4.5, 1.4);
-      g.fill();
-    } else if (this.kind === 'bomber') {
-      // 爆符傀儡：煤屑工装斜纹围裙，腰部缠满整排红色雷管束，胸前挂防毒滤罐
-      g.fillColor = new Color(90, 55, 30);
-      g.roundRect(-9, -6, 18, 24, 3);
-      g.fill();
-
-      // 工装深灰帆布前围裙
-      g.fillColor = new Color(50, 52, 58);
-      g.roundRect(-7, -4, 14, 18, 2);
-      g.fill();
-
-      // 胸前斜挎的防毒面具圆柱滤罐
-      g.fillColor = new Color(85, 95, 75);
-      g.roundRect(1, 4, 6, 10, 2);
-      g.fill();
-      g.strokeColor = new Color(30, 35, 25);
-      g.lineWidth = 1.0;
-      g.moveTo(1, 7);
-      g.lineTo(7, 7);
-      g.moveTo(1, 10);
-      g.lineTo(7, 10);
-      g.stroke();
-
-      // 腰间整圈红色雷管束（黑色胶带捆扎）
-      g.fillColor = new Color(215, 35, 35);
-      g.rect(-13, -4, 4, 14);
-      g.rect(-10, -5, 4, 15);
-      g.fill();
-      // 黑色电工胶带封口
-      g.fillColor = new Color(20, 20, 25);
-      g.rect(-13.5, 0, 7.5, 3);
-      g.fill();
-      // 雷管顶部引信
-      g.strokeColor = new Color(240, 225, 200);
-      g.lineWidth = 1.2;
-      g.moveTo(-11, 10);
-      g.lineTo(-13, 15);
-      g.stroke();
-    } else if (this.kind === 'rider') {
-      // 骑兽夜叉：身披墨西哥刺绣流苏斗篷（Poncho）
-      g.fillColor = new Color(175, 45, 35);
-      g.moveTo(-12, 18);
-      g.lineTo(12, 18);
-      g.lineTo(15, -4);
-      g.lineTo(-15, -4);
-      g.close();
-      g.fill();
-
-      // 阿兹特克几何条纹装饰
-      g.fillColor = new Color(245, 230, 180);
-      g.rect(-13, 4, 26, 3);
-      g.fill();
-      g.fillColor = new Color(30, 25, 20);
-      g.rect(-13, 8, 26, 1.8);
-      g.fill();
-
-      // 下摆流苏垂穗
-      g.strokeColor = new Color(215, 185, 120);
-      g.lineWidth = 1.2;
-      for (let x = -13; x <= 13; x += 3) {
-        g.moveTo(x, -4);
-        g.lineTo(x, -8);
-      }
-      g.stroke();
+    const g=node.getComponent(Graphics)||node.addComponent(Graphics); g.clear();
+    if(this.kind==='brawler'){
+      g.fillColor=new Color(53,50,61); g.moveTo(-13,16); g.bezierCurveTo(-18,9,-17,-5,-8,-9); g.lineTo(9,-7); g.bezierCurveTo(17,-2,16,11,11,17); g.close(); g.fill();
+      g.fillColor=new Color(110,91,72); g.moveTo(-9,4); g.lineTo(0,12); g.lineTo(9,4); g.lineTo(4,-5); g.lineTo(-5,-5); g.close(); g.fill();
+      g.strokeColor=new Color(170,52,47); g.lineWidth=2; g.moveTo(-6,1); g.bezierCurveTo(-1,6,3,-4,7,2); g.stroke();
+    } else if(this.kind==='gunner'){
+      g.fillColor=new Color(46,55,87,170); g.moveTo(-11,18); g.lineTo(11,18); g.bezierCurveTo(15,5,13,-13,5,-24); g.bezierCurveTo(1,-16,-4,-16,-8,-25); g.bezierCurveTo(-15,-10,-16,6,-11,18); g.close(); g.fill();
+      g.strokeColor=new Color(105,132,168,180); g.lineWidth=1.5; g.moveTo(-7,12); g.bezierCurveTo(-2,4,3,10,8,0); g.moveTo(-9,4); g.bezierCurveTo(-2,-5,5,1,9,-10); g.stroke();
+    } else if(this.kind==='shotgunner'){
+      g.fillColor=new Color(226,214,177); g.moveTo(0,23); g.lineTo(26,2); g.lineTo(0,-18); g.lineTo(-26,2); g.close(); g.fill();
+      g.strokeColor=new Color(142,47,43); g.lineWidth=2;
+      for(let a=-20;a<=20;a+=10){g.moveTo(0,3); g.lineTo(a, a<0?-8:12);} g.stroke();
+      g.fillColor=new Color(38,38,49); g.circle(0,3,5); g.fill();
+    } else if(this.kind==='bomber'){
+      g.fillColor=new Color(218,199,157); g.moveTo(-12,17); g.lineTo(10,18); g.lineTo(13,-10); g.lineTo(-10,-13); g.close(); g.fill();
+      g.strokeColor=new Color(174,49,44); g.lineWidth=2; g.moveTo(-9,12); g.lineTo(8,-8); g.moveTo(8,13); g.lineTo(-7,-9); g.stroke();
+      for(let y=8;y>=-6;y-=7){g.fillColor=new Color(139,39,39); g.rect(-3,y,6,3); g.fill();}
     } else {
-      // 双枪游魂：双交叉斜挎牛皮飞符带（每颗飞符独立反光），深色翻领巡夜师马甲与怀表链
-      g.fillColor = new Color(55, 62, 58);
-      g.roundRect(-9, -6, 18, 24, 3);
-      g.fill();
-
-      // 双交叉牛皮飞符带（Bandolier）
-      g.strokeColor = new Color(90, 52, 28);
-      g.lineWidth = 3.2;
-      g.moveTo(-9, 16);
-      g.lineTo(9, -2);
-      g.moveTo(9, 16);
-      g.lineTo(-9, -2);
-      g.stroke();
-
-      // 闪闪发亮的黄铜飞符粒
-      g.fillColor = new Color(255, 215, 75);
-      g.circle(-4, 11, 1.3);
-      g.circle(0, 7, 1.3);
-      g.circle(4, 3, 1.3);
-      g.circle(4, 11, 1.3);
-      g.circle(-4, 3, 1.3);
-      g.fill();
-
-      // 牛皮腰带与黄铜皮带扣
-      g.fillColor = new Color(65, 35, 18);
-      g.rect(-9.5, -4, 19, 4);
-      g.fill();
-      g.strokeColor = new Color(245, 205, 75);
-      g.lineWidth = 1.2;
-      g.rect(-2.5, -5, 5, 6);
-      g.stroke();
-
-      // 银色细怀表链
-      g.strokeColor = new Color(210, 215, 225);
-      g.lineWidth = 1.0;
-      g.moveTo(-4, 1);
-      g.bezierCurveTo(-1, -3, 3, -3, 5, 0);
-      g.stroke();
+      g.fillColor=new Color(68,41,79); g.moveTo(-14,18); g.lineTo(14,18); g.lineTo(18,-7); g.lineTo(-18,-7); g.close(); g.fill();
+      g.fillColor=new Color(189,55,48); g.moveTo(-17,7); g.lineTo(17,7); g.lineTo(13,1); g.lineTo(-13,1); g.close(); g.fill();
+      g.strokeColor=new Color(225,182,91); g.lineWidth=1.5; g.moveTo(-12,14); g.lineTo(10,-3); g.stroke();
     }
-
-    // 精英怪专属凶悍标识：佩戴黄金悬赏骷髅星标，彻底杜绝突兀单线圆圈
-    if (this.isElite) {
-      g.fillColor = new Color(195, 35, 30);
-      g.roundRect(-6, 3, 12, 7, 2);
-      g.fill();
-      g.fillColor = new Color(255, 215, 65);
-      g.roundRect(-4, 4.5, 8, 4, 1);
-      g.fill();
-    }
+    if(this.isElite){ g.strokeColor=new Color(244,197,97); g.lineWidth=2; g.roundRect(-16,-14,32,38,7); g.stroke(); }
   }
 
   // 绘制敌人头部（丰富五官、刀疤、面巾、桶盔与风镜）
   private drawEnemyHead(node: Node) {
-    const g = node.getComponent(Graphics) || node.addComponent(Graphics);
-    g.clear();
-
-    if (this.kind === 'brawler') {
-      // 兽祟：方下巴刚猛脸庞、眼角巨大十字裂痕刀疤、红黑海盗碎花头巾、嘴叼草秆与金牙
-      g.fillColor = new Color(215, 155, 120);
-      g.roundRect(-6.5, -4, 13, 14, 3);
-      g.fill();
-
-      // 下巴青黑胡茬
-      g.fillColor = new Color(90, 65, 55, 140);
-      g.roundRect(-5, -4, 10, 4, 1.5);
-      g.fill();
-
-      // 从眉骨劈到脸颊的深红大刀疤
-      g.strokeColor = new Color(165, 35, 35);
-      g.lineWidth = 1.5;
-      g.moveTo(-2, 7);
-      g.lineTo(3, -1);
-      g.stroke();
-      g.moveTo(0, 4);
-      g.lineTo(2, 2);
-      g.stroke();
-
-      // 凶悍黑眼圈与反光金牙
-      g.fillColor = new Color(25, 20, 20);
-      g.circle(-2.5, 4, 1.2);
-      g.circle(2.5, 4, 1.2);
-      g.fill();
-      g.fillColor = new Color(255, 215, 60);
-      g.rect(1, -2, 2, 1.6); // 金牙闪耀
-      g.fill();
-
-      // 嘴里叼着的干草秆
-      g.strokeColor = new Color(230, 205, 110);
-      g.lineWidth = 1.2;
-      g.moveTo(2.5, -2);
-      g.lineTo(8, -4);
-      g.stroke();
-
-      // 额头绑着的红黑碎花海盗头巾（Bandana）
-      g.fillColor = new Color(195, 30, 30);
-      g.roundRect(-7.5, 4, 15, 8, 3);
-      g.fill();
-      // 头巾脑后系带在风中翻卷
-      g.moveTo(-7.5, 7);
-      g.bezierCurveTo(-12, 12, -15, 6, -18, 9);
-      g.lineTo(-13, 5);
-      g.close();
-      g.fill();
-    } else if (this.kind === 'shotgunner') {
-      // 纸伞妖：沉重冷轧生铁水桶头盔，正中央狭长发红光观测缝
-      g.fillColor = new Color(55, 60, 68);
-      g.roundRect(-7.5, -4, 15, 17, 3);
-      g.fill();
-
-      // 侧面紧固大螺栓
-      g.fillColor = new Color(175, 180, 190);
-      g.circle(-6, 2, 1.4);
-      g.circle(6, 2, 1.4);
-      g.fill();
-
-      // 水平狭长深红恶魔观测缝（红芒发光）
-      g.fillColor = new Color(20, 15, 15);
-      g.rect(-5, 3, 10, 2.5);
-      g.fill();
-      g.fillColor = new Color(255, 45, 35);
-      g.rect(-4, 3.5, 8, 1.5);
-      g.fill();
-    } else if (this.kind === 'bomber') {
-      // 爆符傀儡：蒸汽朋克双圆黄铜厚风镜，被炸焦的杂乱卷发，满脸朱砂油污，疯狂大笑
-      g.fillColor = new Color(220, 165, 130);
-      g.roundRect(-6.5, -4, 13, 14, 3);
-      g.fill();
-
-      // 脸部黑色朱砂烟尘污斑
-      g.fillColor = new Color(30, 30, 35, 160);
-      g.circle(-3, -1, 2.2);
-      g.circle(3, 1, 1.8);
-      g.fill();
-
-      // 咧开大嘴疯狂狂笑（露出参差不齐的牙齿）
-      g.fillColor = new Color(40, 15, 15);
-      g.roundRect(-4, -3.5, 8, 4, 1.5);
-      g.fill();
-      g.fillColor = new Color(245, 235, 205);
-      g.rect(-3, -3, 2, 1.4);
-      g.rect(1, -3, 2, 1.4);
-      g.fill();
-
-      // 蒸汽朋克精密黄铜双联风镜（圆环、镜框铆钉、反光深墨绿镜片）
-      g.fillColor = new Color(210, 165, 55);
-      g.circle(-3.2, 4, 3.8);
-      g.circle(3.2, 4, 3.8);
-      g.fill();
-      g.fillColor = new Color(25, 45, 35);
-      g.circle(-3.2, 4, 2.5);
-      g.circle(3.2, 4, 2.5);
-      g.fill();
-      // 镜片高光斑
-      g.fillColor = new Color(255, 255, 255);
-      g.circle(-2.2, 5, 0.9);
-      g.circle(4.2, 5, 0.9);
-      g.fill();
-
-      // 爆炸炸焦的卷曲乱发（向四周炸开）
-      g.fillColor = new Color(35, 28, 24);
-      g.circle(-6, 9, 3);
-      g.circle(0, 11, 3.5);
-      g.circle(6, 9, 3);
-      g.fill();
-    } else if (this.kind === 'rider') {
-      // 骑兽夜叉：宽大墨西哥草帽（Sombrero，草编螺旋、圆球吊穗、五角星），墨绿面巾
-      g.fillColor = new Color(215, 160, 125);
-      g.roundRect(-6, -4, 12, 13, 3);
-      g.fill();
-
-      // 墨绿面巾
-      g.fillColor = new Color(35, 60, 42);
-      g.roundRect(-6, -4, 12, 6.5, 2);
-      g.fill();
-
-      // 宽大墨西哥草帽（帽顶高耸、帽檐超宽带吊穗）
-      g.fillColor = new Color(215, 185, 130);
-      g.ellipse(0, 9, 21, 5); // 宽大帽檐
-      g.fill();
-      g.roundRect(-7, 8, 14, 10, 3); // 锥形帽顶
-      g.fill();
-      // 帽檐刺绣花边与吊穗
-      g.strokeColor = new Color(160, 40, 30);
-      g.lineWidth = 1.2;
-      g.moveTo(-18, 9);
-      g.lineTo(18, 9);
-      g.stroke();
+    const g=node.getComponent(Graphics)||node.addComponent(Graphics); g.clear();
+    if(this.kind==='brawler'){
+      g.fillColor=new Color(89,76,69); g.moveTo(-10,-5); g.lineTo(-9,9); g.lineTo(-4,15); g.lineTo(0,10); g.lineTo(5,15); g.lineTo(10,8); g.lineTo(9,-5); g.close(); g.fill();
+      g.fillColor=new Color(237,208,121); g.ellipse(-4,4,2.8,1.5); g.ellipse(4,4,2.8,1.5); g.fill();
+      g.fillColor=new Color(38,28,28); g.moveTo(-5,-2); g.lineTo(0,-7); g.lineTo(5,-2); g.lineTo(0,0); g.close(); g.fill();
+    } else if(this.kind==='gunner'){
+      g.fillColor=new Color(188,202,207,125); g.ellipse(0,3,8,12); g.fill();
+      g.fillColor=new Color(231,197,105,200); g.circle(-3,5,1.3); g.circle(3,5,1.3); g.fill();
+      g.strokeColor=new Color(98,114,147,170); g.lineWidth=2; g.moveTo(-8,11); g.bezierCurveTo(-14,8,-14,-2,-10,-8); g.moveTo(8,11); g.bezierCurveTo(14,8,14,-2,10,-8); g.stroke();
+    } else if(this.kind==='shotgunner'){
+      g.fillColor=new Color(238,225,191); g.circle(0,2,10); g.fill();
+      g.strokeColor=new Color(151,49,44); g.lineWidth=2; for(let i=0;i<8;i++){const a=i*Math.PI/4;g.moveTo(0,2);g.lineTo(Math.cos(a)*10,2+Math.sin(a)*10);} g.stroke();
+      g.fillColor=new Color(26,24,32); g.ellipse(0,2,3,2); g.fill();
+    } else if(this.kind==='bomber'){
+      g.fillColor=new Color(217,201,164); g.moveTo(-8,-5);g.lineTo(-7,9);g.lineTo(0,14);g.lineTo(8,8);g.lineTo(7,-6);g.close();g.fill();
+      g.strokeColor=new Color(163,45,43);g.lineWidth=2;g.moveTo(-5,8);g.lineTo(5,-3);g.moveTo(5,8);g.lineTo(-4,-4);g.stroke();
+      g.fillColor=new Color(35,29,35);g.circle(-3,3,1.5);g.circle(3,3,1.5);g.fill();
     } else {
-      // 双枪游魂：卷边做旧巡夜师帽带弹孔裂痕，黑色三角面巾，阴鸷冷酷眼神
-      g.fillColor = new Color(220, 165, 130);
-      g.roundRect(-6, -4, 12, 13, 3);
-      g.fill();
-
-      // 警惕阴冷的眼神（眼白与黑瞳仁）
-      g.fillColor = new Color(245, 245, 245);
-      g.circle(-2.5, 3.5, 1.4);
-      g.circle(2.5, 3.5, 1.4);
-      g.fill();
-      g.fillColor = new Color(20, 20, 25);
-      g.circle(-2.2, 3.5, 0.8);
-      g.circle(2.8, 3.5, 0.8);
-      g.fill();
-
-      // 黑色盗匪三角面巾（遮住口鼻，带自然折皱与垂摆）
-      g.fillColor = new Color(28, 28, 35);
-      g.roundRect(-6.5, -4, 13, 7, 2);
-      g.fill();
-      g.moveTo(-2, -4);
-      g.lineTo(2, -4);
-      g.lineTo(0, -7);
-      g.close();
-      g.fill();
-
-      // 棕黑双边翘卷巡夜师帽（帽带蛇皮花纹、被飞符穿透的焦黑弹孔）
-      g.fillColor = new Color(60, 42, 30);
-      g.ellipse(0, 9, 19, 4.8);
-      g.fill();
-      g.roundRect(-8, 8.5, 16, 9.5, 2.5);
-      g.fill();
-      // 帽带
-      g.fillColor = new Color(185, 145, 75);
-      g.rect(-8, 9, 16, 1.8);
-      g.fill();
-      // 帽檐被飞符打穿的焦黑弹洞
-      g.fillColor = new Color(15, 12, 10);
-      g.circle(6.5, 9, 1.2);
-      g.fill();
+      g.fillColor=new Color(105,78,68); g.roundRect(-7,-5,14,15,4); g.fill();
+      g.fillColor=new Color(34,27,42); g.moveTo(-9,11);g.lineTo(0,19);g.lineTo(9,11);g.lineTo(6,7);g.lineTo(-6,7);g.close();g.fill();
+      g.fillColor=new Color(230,183,89);g.circle(-2.7,4,1.2);g.circle(2.7,4,1.2);g.fill();
     }
   }
 
   // 绘制敌人武器（极高写实细节刻画）
   private drawEnemyWeapon(node: Node) {
-    const g = node.getComponent(Graphics) || node.addComponent(Graphics);
-    g.clear();
-
-    if (this.kind === 'brawler') {
-      // 锯齿开山大砍刀：加厚刀脊、三道倒刺锯齿、深陷排血槽、锋利刃面抛光、鹿角刀柄与手绳
-      g.fillColor = new Color(110, 58, 25);
-      g.rect(-5, -1.5, 6, 3.5); // 鹿角柄
-      g.fill();
-      // 椭圆黄铜护手
-      g.fillColor = new Color(225, 185, 60);
-      g.ellipse(1, 0, 1.5, 4);
-      g.fill();
-
-      // 银光闪闪重型大刀身
-      g.fillColor = new Color(220, 225, 235);
-      g.moveTo(2, -2.5);
-      g.lineTo(19, 1);
-      g.lineTo(23, 11);
-      g.lineTo(8, 5);
-      g.close();
-      g.fill();
-
-      // 刀背锯齿与深黑排血槽
-      g.strokeColor = new Color(85, 90, 100);
-      g.lineWidth = 1.3;
-      g.moveTo(4, 1.5);
-      g.lineTo(16, 4);
-      g.stroke();
-
-      // 刀柄末端垂挂防脱落编织牛皮手绳
-      g.strokeColor = new Color(85, 45, 20);
-      g.lineWidth = 1.2;
-      g.moveTo(-5, 0);
-      g.bezierCurveTo(-8, -4, -6, -8, -4, -9);
-      g.stroke();
-    } else if (this.kind === 'shotgunner') {
-      // 重型截短双管霰弹枪：缠绕血污布条绷带、粗大双枪管、双击锤、胡桃木切短枪托
-      g.fillColor = new Color(45, 48, 55);
-      g.roundRect(0, -4, 21, 8, 2);
-      g.fill();
-
-      // 枪管防烫泥垢白绷带
-      g.fillColor = new Color(215, 210, 195);
-      g.rect(6, -4, 3, 8);
-      g.rect(12, -4, 3, 8);
-      g.fill();
-
-      // 并列粗大双枪眼深邃黑洞
-      g.fillColor = new Color(12, 12, 15);
-      g.circle(21, 1.4, 1.7);
-      g.circle(21, -1.4, 1.7);
-      g.fill();
-
-      // 两个外露高耸击锤
-      g.fillColor = new Color(160, 165, 175);
-      g.rect(1, 3.5, 2, 2.5);
-      g.rect(1, -6, 2, 2.5);
-      g.fill();
-    } else if (this.kind === 'bomber') {
-      // 铸铁球形引信炸弹：粗糙生铁球壳、铸造合缝棱、黄铜引信口、燃烧的麻绳引信喷发动态火星
-      g.fillColor = new Color(32, 34, 40);
-      g.circle(8, 0, 8);
-      g.fill();
-      // 铸铁合模棱线
-      g.strokeColor = new Color(65, 70, 80);
-      g.lineWidth = 1.0;
-      g.circle(8, 0, 8);
-      g.stroke();
-
-      // 黄铜引信螺纹口
-      g.fillColor = new Color(210, 165, 60);
-      g.rect(12, 3, 3, 3);
-      g.fill();
-
-      // 弯曲麻绳引信
-      g.strokeColor = new Color(175, 130, 75);
-      g.lineWidth = 1.3;
-      g.moveTo(13, 5);
-      g.bezierCurveTo(15, 8, 13, 12, 16, 14);
-      g.stroke();
-
-      // 引线顶端喷发的炽热火花
-      g.fillColor = new Color(255, 215, 55);
-      g.circle(16, 14, 2.8);
-      g.fill();
-      g.fillColor = new Color(255, 90, 30);
-      g.circle(17, 15, 1.5);
-      g.fill();
-    } else if (this.kind === 'rider') {
-      // 骑兵长温彻斯特步枪：金黄铜机匣、深色木质护木与伸长的冷黑枪管
-      g.fillColor = new Color(42, 45, 50);
-      g.rect(0, -2, 26, 4); // 长枪管
-      g.fill();
-      g.fillColor = new Color(225, 185, 65);
-      g.rect(2, -2.5, 6, 5); // 黄金机匣
-      g.fill();
-      g.fillColor = new Color(110, 55, 25);
-      g.rect(8, -1.8, 8, 3.6); // 护木
-      g.fill();
+    const g=node.getComponent(Graphics)||node.addComponent(Graphics); g.clear();
+    if(this.kind==='brawler'){
+      g.strokeColor=new Color(125,82,63);g.lineWidth=4;g.moveTo(-4,0);g.lineTo(13,1);g.stroke();
+      g.fillColor=new Color(118,104,83);g.moveTo(12,-5);g.bezierCurveTo(23,-2,24,6,13,9);g.lineTo(17,2);g.close();g.fill();
+    } else if(this.kind==='gunner'){
+      g.strokeColor=new Color(201,160,83);g.lineWidth=2;g.moveTo(0,0);g.lineTo(16,-4);g.stroke();
+      g.fillColor=new Color(89,55,54);g.roundRect(10,-11,13,16,3);g.fill();
+      g.fillColor=new Color(246,193,83,210);g.ellipse(16,-3,6,8);g.fill();
+    } else if(this.kind==='shotgunner'){
+      g.fillColor=new Color(224,213,177);g.moveTo(1,0);g.lineTo(22,10);g.lineTo(20,-12);g.close();g.fill();
+      g.strokeColor=new Color(151,48,43);g.lineWidth=1.5;g.moveTo(2,0);g.lineTo(20,9);g.moveTo(2,0);g.lineTo(20,-11);g.stroke();
+    } else if(this.kind==='bomber'){
+      g.fillColor=new Color(226,207,165);g.roundRect(2,-9,15,18,2);g.fill();
+      g.strokeColor=new Color(179,48,43);g.lineWidth=2;g.moveTo(5,6);g.lineTo(14,-6);g.moveTo(14,6);g.lineTo(5,-6);g.stroke();
+      g.fillColor=new Color(245,169,66);g.circle(18,7,2.5);g.fill();
     } else {
-      // 双枪游魂做旧柯尔特转轮：烤蓝八角长枪管、旋转六孔弹巢、象牙白雕花握把、后扳击锤
-      g.fillColor = new Color(80, 85, 92);
-      g.roundRect(0, -1.8, 15, 4.4, 1.2);
-      g.fill();
-
-      // 六孔旋转弹巢
-      g.fillColor = new Color(42, 45, 50);
-      g.circle(3.5, 0.4, 3.0);
-      g.fill();
-
-      // 象牙白雕花手柄
-      g.fillColor = new Color(245, 240, 225);
-      g.roundRect(-4, -4, 4.5, 6, 1.5);
-      g.fill();
-
-      // 后扳击锤
-      g.fillColor = new Color(180, 185, 195);
-      g.rect(-1, 2, 2, 2);
-      g.fill();
+      g.strokeColor=new Color(76,55,75);g.lineWidth=5;g.moveTo(-3,0);g.lineTo(25,0);g.stroke();
+      g.fillColor=new Color(205,164,83);g.moveTo(21,-5);g.lineTo(31,0);g.lineTo(21,5);g.close();g.fill();
     }
   }
 
@@ -942,6 +439,12 @@ export class SpiritActor extends Component {
     g.fill();
   }
 
+  public applyResidualSlow(duration: number = 0.35, factor: number = 0.55) {
+    if (this.isDead) return;
+    this.residualSlowTimer = Math.max(this.residualSlowTimer, duration);
+    this.residualSlowFactor = Math.min(this.residualSlowFactor, factor);
+  }
+
   // 承受伤害
   takeDmg(amount: number): boolean {
     if (this.isDead) return false;
@@ -1034,7 +537,12 @@ export class SpiritActor extends Component {
   updateEnemy(dt: number, heroPos: Vec3) {
     if (this.isDead) return;
 
-    this.animTimer += dt * 8;
+    if (this.residualSlowTimer > 0) {
+      this.residualSlowTimer = Math.max(0, this.residualSlowTimer - dt);
+      if (this.residualSlowTimer <= 0) this.residualSlowFactor = 1;
+    }
+    const spiritTempo = this.residualSlowTimer > 0 ? this.residualSlowFactor : 1;
+    this.animTimer += dt * 8 * spiritTempo;
     const myPos = this.node.position;
 
     // 计算朝向主角的向量
@@ -1056,7 +564,7 @@ export class SpiritActor extends Component {
     // 移动与攻击判断
     if (dist > this.atkRange) {
       // 追击主角
-      const step = this.spd * dt;
+      const step = this.spd * spiritTempo * dt;
       const nx = myPos.x + (dx / dist) * step;
       const ny = myPos.y + (dy / dist) * step;
       this.node.setPosition(nx, ny, 0);
@@ -1139,7 +647,7 @@ export class SpiritActor extends Component {
     parent.addChild(dust);
 
     const g = dust.addComponent(Graphics);
-    g.fillColor = new Color(210, 185, 145, 120);
+    g.fillColor = new Color(104, 129, 157, 95);
     g.circle(0, 0, 3.5);
     g.fill();
 
