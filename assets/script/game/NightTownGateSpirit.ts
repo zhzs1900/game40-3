@@ -324,7 +324,7 @@ export class NightTownGateSpirit extends Component {
     // 符封崩裂：木石外壳震开、面具开合
     tween(this.bodyRoot)
       .to(0.1, { scale: new Vec3(1.22, 1.08, 1), angle: 4 })
-      .to(0.2, { scale: new Vec3(1.0, 1.0, 1) })
+      .to(0.2, { scale: new Vec3(1.0, 1.0, 1), angle: 0 })
       .start();
   }
 
