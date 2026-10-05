@@ -17,6 +17,7 @@ export class LanternHUD extends Component {
 
   // 符箓栏展示栏
   private handRowNode!: Node;
+  private handRailNode!: Node;
   private handCards: { node: Node; card: CardItem }[] = [];
 
   // 右侧核心操作大按钮
@@ -227,8 +228,8 @@ export class LanternHUD extends Component {
     this.handRowNode = new Node('TalismanRow');
     this.handRowNode.setPosition(0, -515, 0);
     this.node.addChild(this.handRowNode);
-    const rail = new Node('TalismanRail'); this.handRowNode.addChild(rail);
-    const g = rail.addComponent(Graphics);
+    this.handRailNode = new Node('TalismanRail'); this.handRowNode.addChild(this.handRailNode);
+    const g = this.handRailNode.addComponent(Graphics);
     g.fillColor = new Color(8, 18, 39, 190);
     g.moveTo(-225,-55); g.lineTo(-204,-70); g.lineTo(202,-70); g.lineTo(226,-50);
     g.lineTo(214,54); g.lineTo(189,68); g.lineTo(-196,68); g.lineTo(-224,49); g.close(); g.fill();
@@ -248,8 +249,9 @@ export class LanternHUD extends Component {
 
   // 刷新展示的符箓栏
   updateHandDisplay(cards: CardItem[]) {
-    for (const child of [...this.handRowNode.children]) child.destroy();
-    this.handRowNode.removeAllChildren();
+    for (const child of [...this.handRowNode.children]) {
+      if (child.name.startsWith('Card_')) child.destroy();
+    }
     this.handCards = [];
 
     // 清理已不在手里的旧选中ID
