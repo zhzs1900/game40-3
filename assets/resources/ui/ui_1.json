@@ -1,0 +1,43 @@
+{
+  "type": "merge_pic",
+  "result": {
+    "fileName": "ui_1.png",
+    "directory": "assets\\resources\\ui",
+    "path": "assets\\resources\\ui\\ui_1.png",
+    "type": "png",
+    "resolution": {
+      "width": 1760,
+      "height": 1280
+    }
+  },
+  "moveSources": false,
+  "sources": [
+    {
+      "index": 1,
+      "name": "coverpage.jpg",
+      "directory": "assets\\resources\\ui",
+      "x": 0,
+      "y": 0,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "index": 2,
+      "name": "background.jpg",
+      "directory": "assets\\resources\\ui",
+      "x": 730,
+      "y": 0,
+      "width": 720,
+      "height": 1280
+    },
+    {
+      "index": 3,
+      "name": "icon.png",
+      "directory": "assets\\resources\\ui",
+      "x": 1460,
+      "y": 0,
+      "width": 300,
+      "height": 300
+    }
+  ]
+}
