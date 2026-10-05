@@ -108,7 +108,7 @@ export class NightTownGateSpirit extends Component {
     this.bodyRoot.addChild(this.headNode);
     this.drawBossHead(this.headNode, 1);
 
-    // 手臂与黄金左轮
+    // 手臂与锁链灯笼
     this.armNode = new Node('Arm');
     this.armNode.setPosition(10, 16, 0);
     this.bodyRoot.addChild(this.armNode);
@@ -170,7 +170,7 @@ export class NightTownGateSpirit extends Component {
     g.fillColor=new Color(111,87,67);g.circle(28,0,7);g.fill();
   }
 
-  // 绘制定制款加长黄金黑漆左轮
+  // 绘制镇门灵锁链灯笼
   private drawGoldRevolver(node: Node) {
     const g=node.addComponent(Graphics);g.clear();
     g.strokeColor=new Color(105,88,76);g.lineWidth=4;g.moveTo(-3,0);g.lineTo(18,0);g.stroke();
