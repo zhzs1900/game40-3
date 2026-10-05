@@ -36,6 +36,9 @@ export class LanternHUD extends Component {
 
   // 符案三选一升级弹窗
   private upgradeModalNode!: Node;
+  private hudPulse: number = 0;
+  private fireAuraNode!: Node;
+  private kataHaloNode!: Node;
 
   // 回调事件
   public onMove?: (dir: Vec3) => void;
@@ -60,133 +63,87 @@ export class LanternHUD extends Component {
     const topRoot = new Node('TopStatus');
     this.node.addChild(topRoot);
 
-    // 生命与护盾底框（左侧，微调位置给中间木牌留足空间）
-    const hpBox = new Node('HpBox');
-    hpBox.setPosition(120, 520, 0);
-    topRoot.addChild(hpBox);
-
-    const boxG = hpBox.addComponent(Graphics);
-    // 皮革底纹
-    boxG.fillColor = new Color(20, 31, 58, 225);
-    boxG.roundRect(-68, -16, 136, 32, 6);
-    boxG.fill();
-    // 黄铜边框
-    boxG.strokeColor = new Color(222, 183, 96);
-    boxG.lineWidth = 1.8;
-    boxG.roundRect(-68, -16, 136, 32, 6);
-    boxG.stroke();
-
-    // 红色血条
-    const hpBarNode = new Node('HpFill');
-    hpBarNode.setPosition(-62, -2, 0);
-    hpBox.addChild(hpBarNode);
-    this.hpBarG = hpBarNode.addComponent(Graphics);
-
-    // 蓝色护盾条
-    const shieldNode = new Node('ShieldFill');
-    shieldNode.setPosition(-62, -10, 0);
-    hpBox.addChild(shieldNode);
-    this.shieldBarG = shieldNode.addComponent(Graphics);
-
-    // 关卡名称展示木牌（加宽到310px，保证完全框住关卡与事件长文本）
     const stageSign = new Node('StageSign');
-    stageSign.setPosition(-205, 580, 0);
+    stageSign.setPosition(-190, 575, 0);
     topRoot.addChild(stageSign);
     const signG = stageSign.addComponent(Graphics);
-    signG.fillColor = new Color(21, 34, 66, 235);
-    signG.roundRect(-120, -18, 240, 36, 8);
-    signG.fill();
-    signG.strokeColor = new Color(213, 174, 92);
-    signG.lineWidth = 1.8;
-    signG.roundRect(-120, -18, 240, 36, 8);
-    signG.stroke();
+    signG.fillColor = new Color(13, 24, 48, 238);
+    signG.moveTo(-132,-17); signG.lineTo(-120,-28); signG.lineTo(96,-28); signG.lineTo(128,-8);
+    signG.lineTo(118,18); signG.lineTo(-105,18); signG.lineTo(-132,7); signG.close(); signG.fill();
+    signG.strokeColor = new Color(218, 179, 91); signG.lineWidth = 2.2;
+    signG.moveTo(-126,-13); signG.bezierCurveTo(-70,-31,55,-30,122,-7);
+    signG.bezierCurveTo(93,16,-44,22,-126,5); signG.close(); signG.stroke();
+    signG.strokeColor = new Color(167, 49, 46); signG.lineWidth = 1.5;
+    signG.moveTo(-110,10); signG.bezierCurveTo(-66,2,-34,11,0,4);
+    signG.bezierCurveTo(30,-2,61,9,105,2); signG.stroke();
 
     const stageLblNode = new Node('StageText');
     stageSign.addChild(stageLblNode);
-    // 给文字节点加上尺寸限制与自动缩小模式，彻底避免文字超出木牌外框
     const signUi = stageLblNode.addComponent(UITransform);
-    signUi.setContentSize(224, 30);
+    signUi.setContentSize(230, 30);
     this.stageLabel = stageLblNode.addComponent(Label);
     this.stageLabel.string = '青石巷口';
-    this.stageLabel.fontSize = 14;
-    this.stageLabel.lineHeight = 16;
+    this.stageLabel.fontSize = 16;
+    this.stageLabel.lineHeight = 18;
     this.stageLabel.horizontalAlign = Label.HorizontalAlign.CENTER;
     this.stageLabel.verticalAlign = Label.VerticalAlign.CENTER;
     this.stageLabel.overflow = Label.Overflow.SHRINK;
-    this.stageLabel.color = new Color(255, 240, 200);
+    this.stageLabel.color = new Color(255, 236, 186);
 
-    // 灵火显示（右侧，对称对齐）
+    const hpBox = new Node('HpBox');
+    hpBox.setPosition(111, 520, 0);
+    topRoot.addChild(hpBox);
+    const boxG = hpBox.addComponent(Graphics);
+    boxG.fillColor = new Color(17, 29, 56, 232);
+    boxG.moveTo(-79,-17); boxG.lineTo(-68,-25); boxG.lineTo(70,-22); boxG.lineTo(82,-9);
+    boxG.lineTo(74,17); boxG.lineTo(-65,20); boxG.close(); boxG.fill();
+    boxG.strokeColor = new Color(207, 168, 86); boxG.lineWidth = 2;
+    boxG.moveTo(-72,-14); boxG.lineTo(-62,-20); boxG.lineTo(65,-18); boxG.lineTo(75,-7);
+    boxG.lineTo(67,12); boxG.lineTo(-61,15); boxG.close(); boxG.stroke();
+    boxG.strokeColor = new Color(92, 112, 150, 180); boxG.lineWidth = 1.1;
+    boxG.moveTo(-57,3); boxG.bezierCurveTo(-18,12,24,-8,62,2); boxG.stroke();
+
+    const hpBarNode = new Node('HpFill');
+    hpBarNode.setPosition(-60, 2, 0); hpBox.addChild(hpBarNode);
+    this.hpBarG = hpBarNode.addComponent(Graphics);
+    const shieldNode = new Node('ShieldFill');
+    shieldNode.setPosition(-60, -9, 0); hpBox.addChild(shieldNode);
+    this.shieldBarG = shieldNode.addComponent(Graphics);
+
     const coinNode = new Node('CoinBox');
-    coinNode.setPosition(-285, 520, 0);
+    coinNode.setPosition(-285, 518, 0);
     topRoot.addChild(coinNode);
     const cg = coinNode.addComponent(Graphics);
-    cg.fillColor = new Color(37, 30, 58, 225);
-    cg.roundRect(-42, -16, 84, 32, 5);
-    cg.fill();
-    cg.strokeColor = new Color(207, 155, 82);
-    cg.lineWidth = 1.5;
-    cg.roundRect(-42, -16, 84, 32, 5);
-    cg.stroke();
-    TalismanRenderer.drawStarBadge(cg, -24, 0, 8, new Color(245, 195, 50));
+    cg.fillColor = new Color(35, 27, 55, 230);
+    cg.moveTo(-45,-16); cg.lineTo(-34,-23); cg.lineTo(35,-20); cg.lineTo(47,-7); cg.lineTo(40,15); cg.lineTo(-33,20); cg.close(); cg.fill();
+    cg.strokeColor = new Color(208, 159, 78); cg.lineWidth = 1.8;
+    cg.moveTo(-41,-12); cg.lineTo(-31,-18); cg.lineTo(31,-16); cg.lineTo(41,-5); cg.lineTo(35,11); cg.lineTo(-29,15); cg.close(); cg.stroke();
+    cg.fillColor = new Color(241, 189, 86, 220);
+    cg.moveTo(-27,8); cg.bezierCurveTo(-34,2,-31,-7,-24,-11); cg.bezierCurveTo(-17,-6,-17,3,-27,8); cg.fill();
 
     const coinLblNode = new Node('CoinText');
-    coinLblNode.setPosition(8, 0, 0);
-    coinNode.addChild(coinLblNode);
-    const coinUi = coinLblNode.addComponent(UITransform);
-    coinUi.setContentSize(48, 24);
+    coinLblNode.setPosition(10, 0, 0); coinNode.addChild(coinLblNode);
+    const coinUi = coinLblNode.addComponent(UITransform); coinUi.setContentSize(50, 24);
     this.coinLabel = coinLblNode.addComponent(Label);
-    this.coinLabel.string = '0';
-    this.coinLabel.fontSize = 15;
-    this.coinLabel.overflow = Label.Overflow.SHRINK;
-    this.coinLabel.color = new Color(255, 225, 120);
+    this.coinLabel.string='0'; this.coinLabel.fontSize=15; this.coinLabel.lineHeight=17;
+    this.coinLabel.horizontalAlign=Label.HorizontalAlign.CENTER; this.coinLabel.verticalAlign=Label.VerticalAlign.CENTER;
+    this.coinLabel.overflow=Label.Overflow.SHRINK; this.coinLabel.color=new Color(255,225,125);
 
-    // 常驻【王牌补给】激励广告按钮（右上角带黄铜框AD标）
+    // 广告按钮业务和外观保持原逻辑，不改回调与奖励链
     this.adSupplyBtn = new Node('AdSupplyBtn');
     this.adSupplyBtn.addComponent(UITransform).setContentSize(110, 40);
-    this.adSupplyBtn.setPosition(250, 510, 0);
-    topRoot.addChild(this.adSupplyBtn);
-
+    this.adSupplyBtn.setPosition(250, 510, 0); topRoot.addChild(this.adSupplyBtn);
     const ag = this.adSupplyBtn.addComponent(Graphics);
-    // 复古长牌底座
-    ag.fillColor = new Color(60, 30, 15, 235);
-    ag.roundRect(-55, -20, 110, 40, 6);
-    ag.fill();
-    ag.strokeColor = new Color(225, 185, 75);
-    ag.lineWidth = 2;
-    ag.roundRect(-55, -20, 110, 40, 6);
-    ag.stroke();
-
-    const adLblNode = new Node('AdLbl');
-    this.adSupplyBtn.addChild(adLblNode);
-    const al = adLblNode.addComponent(Label);
-    al.string = '王牌补给';
-    al.fontSize = 17;
-    al.color = new Color(255, 235, 175);
-
-    // 右上角鲜明 AD 标识黄铜铭牌
-    const badgeNode = new Node('AdBadge');
-    badgeNode.setPosition(42, 14, 0);
-    this.adSupplyBtn.addChild(badgeNode);
-    const bg = badgeNode.addComponent(Graphics);
-    bg.fillColor = new Color(185, 35, 35);
-    bg.roundRect(-14, -8, 28, 16, 3);
-    bg.fill();
-    bg.strokeColor = new Color(255, 220, 90);
-    bg.lineWidth = 1;
-    bg.roundRect(-14, -8, 28, 16, 3);
-    bg.stroke();
-
-    const adTxt = new Node('Txt');
-    badgeNode.addChild(adTxt);
-    const adL = adTxt.addComponent(Label);
-    adL.string = 'AD';
-    adL.fontSize = 11;
-    adL.lineHeight = 12;
-    adL.color = new Color(255, 255, 220);
-
-    this.adSupplyBtn.on(Node.EventType.TOUCH_END, () => {
-      if (this.onAdSupplyClick) this.onAdSupplyClick();
-    });
+    ag.fillColor = new Color(60, 30, 15, 235); ag.roundRect(-55,-20,110,40,6); ag.fill();
+    ag.strokeColor = new Color(225,185,75); ag.lineWidth=2; ag.roundRect(-55,-20,110,40,6); ag.stroke();
+    const adLblNode=new Node('AdLbl');this.adSupplyBtn.addChild(adLblNode);
+    const al=adLblNode.addComponent(Label);al.string='王牌补给';al.fontSize=17;al.color=new Color(255,235,175);
+    const badgeNode=new Node('AdBadge');badgeNode.setPosition(42,14,0);this.adSupplyBtn.addChild(badgeNode);
+    const bg=badgeNode.addComponent(Graphics);bg.fillColor=new Color(185,35,35);bg.roundRect(-14,-8,28,16,3);bg.fill();
+    bg.strokeColor=new Color(255,220,90);bg.lineWidth=1;bg.roundRect(-14,-8,28,16,3);bg.stroke();
+    const adTxt=new Node('Txt');badgeNode.addChild(adTxt);const adL=adTxt.addComponent(Label);
+    adL.string='AD';adL.fontSize=11;adL.lineHeight=12;adL.color=new Color(255,255,220);
+    this.adSupplyBtn.on(Node.EventType.TOUCH_END,()=>{if(this.onAdSupplyClick)this.onAdSupplyClick();});
   }
 
   // 2. 左下大尺寸触摸虚拟摇杆
@@ -268,14 +225,21 @@ export class LanternHUD extends Component {
   // 3. 底部大符箓符箓栏栏
   private createHandRow() {
     this.handRowNode = new Node('TalismanRow');
-    this.handRowNode.setPosition(0, -520, 0);
+    this.handRowNode.setPosition(0, -515, 0);
     this.node.addChild(this.handRowNode);
-    const rail = new Node('TalismanRail');
-    rail.setPosition(0, -3, 0);
-    this.handRowNode.addChild(rail);
+    const rail = new Node('TalismanRail'); this.handRowNode.addChild(rail);
     const g = rail.addComponent(Graphics);
-    g.fillColor = new Color(12, 22, 43, 165); g.roundRect(-218, -57, 436, 114, 16); g.fill();
-    g.strokeColor = new Color(183, 142, 78, 150); g.lineWidth = 1.5; g.roundRect(-218, -57, 436, 114, 16); g.stroke();
+    g.fillColor = new Color(8, 18, 39, 190);
+    g.moveTo(-225,-55); g.lineTo(-204,-70); g.lineTo(202,-70); g.lineTo(226,-50);
+    g.lineTo(214,54); g.lineTo(189,68); g.lineTo(-196,68); g.lineTo(-224,49); g.close(); g.fill();
+    g.strokeColor = new Color(198, 151, 77, 205); g.lineWidth = 2.3;
+    g.moveTo(-215,-49); g.bezierCurveTo(-140,-71,141,-71,214,-45);
+    g.lineTo(205,44); g.bezierCurveTo(112,65,-126,66,-211,45); g.close(); g.stroke();
+    g.strokeColor = new Color(108, 132, 167, 150); g.lineWidth = 1.2;
+    g.moveTo(-184,-39); g.bezierCurveTo(-90,-54,91,-54,184,-37); g.stroke();
+    g.strokeColor = new Color(171, 50, 46, 170);
+    for(let x=-165;x<=165;x+=66){ g.moveTo(x,-50); g.bezierCurveTo(x-8,-30,x+8,-12,x,8); g.bezierCurveTo(x-7,22,x+8,38,x,50); }
+    g.stroke();
   }
 
   // 记录选中的卡牌编号
@@ -353,74 +317,76 @@ export class LanternHUD extends Component {
 
   // 4. 右侧超大【驱邪/出牌】与【闪避】、【灯阵】大按钮
   private createActionButtons() {
-    const actionRoot = new Node('SealActions');
-    this.node.addChild(actionRoot);
+    const actionRoot = new Node('SealActions'); this.node.addChild(actionRoot);
 
-    this.fireBtnNode = new Node('DriveEvilBtn');
-    this.fireBtnNode.addComponent(UITransform).setContentSize(132, 118);
-    this.fireBtnNode.setPosition(245, -410, 0);
-    actionRoot.addChild(this.fireBtnNode);
-    const fg = this.fireBtnNode.addComponent(Graphics);
-    fg.fillColor = new Color(26, 25, 48, 235); fg.roundRect(-62, -54, 124, 108, 18); fg.fill();
-    fg.strokeColor = new Color(224, 180, 88); fg.lineWidth = 3; fg.roundRect(-62, -54, 124, 108, 18); fg.stroke();
-    fg.strokeColor = new Color(186, 50, 47); fg.lineWidth = 2;
-    fg.moveTo(-34, 26); fg.bezierCurveTo(-8, 42, 8, 10, 35, 30);
-    fg.moveTo(-31, 6); fg.bezierCurveTo(-7, -10, 12, 18, 33, 0);
-    fg.moveTo(-25, -22); fg.lineTo(26, -22); fg.stroke();
+    this.fireAuraNode = new Node('DriveEvilAura'); this.fireAuraNode.setPosition(245,-410,0); actionRoot.addChild(this.fireAuraNode);
+    const aura = this.fireAuraNode.addComponent(Graphics);
+    aura.strokeColor = new Color(235, 186, 86, 125); aura.lineWidth=3;
+    for(let i=0;i<8;i++){const a=i*Math.PI/4;const r1=64,r2=i%2===0?76:70;aura.moveTo(Math.cos(a)*r1,Math.sin(a)*r1);aura.lineTo(Math.cos(a)*r2,Math.sin(a)*r2);} aura.stroke();
 
-    const lblNode = new Node('DriveEvilLabel');
-    this.fireBtnNode.addChild(lblNode);
-    lblNode.setPosition(0, -2, 0);
-    lblNode.addComponent(UITransform).setContentSize(96, 52);
-    this.fireLabel = lblNode.addComponent(Label);
-    this.fireLabel.string = '驱邪'; this.fireLabel.fontSize = 18; this.fireLabel.lineHeight = 22;
-    this.fireLabel.horizontalAlign = Label.HorizontalAlign.CENTER; this.fireLabel.verticalAlign = Label.VerticalAlign.CENTER;
-    this.fireLabel.overflow = Label.Overflow.SHRINK; this.fireLabel.color = new Color(255, 231, 175);
+    this.fireBtnNode = new Node('DriveEvilBtn'); this.fireBtnNode.addComponent(UITransform).setContentSize(136,122);
+    this.fireBtnNode.setPosition(245,-410,0); actionRoot.addChild(this.fireBtnNode);
+    const fg=this.fireBtnNode.addComponent(Graphics);
+    fg.fillColor=new Color(20,22,48,240);
+    fg.moveTo(-62,-38);fg.bezierCurveTo(-72,-4,-58,38,-30,55);fg.lineTo(0,66);fg.lineTo(31,54);
+    fg.bezierCurveTo(62,37,72,-4,60,-40);fg.lineTo(30,-57);fg.lineTo(-31,-56);fg.close();fg.fill();
+    fg.strokeColor=new Color(228,184,87);fg.lineWidth=3;
+    fg.moveTo(-56,-34);fg.bezierCurveTo(-64,-1,-52,32,-27,48);fg.lineTo(0,58);fg.lineTo(27,48);
+    fg.bezierCurveTo(52,31,63,-2,55,-34);fg.lineTo(27,-49);fg.lineTo(-27,-49);fg.close();fg.stroke();
+    fg.strokeColor=new Color(183,51,47);fg.lineWidth=2;
+    fg.moveTo(-31,26);fg.bezierCurveTo(-13,39,6,15,29,28);fg.moveTo(-30,7);fg.bezierCurveTo(-8,-10,8,15,31,1);
+    fg.moveTo(-23,-21);fg.bezierCurveTo(-3,-27,7,-12,25,-23);fg.stroke();
 
-    this.fireBtnNode.on(Node.EventType.TOUCH_START, () => this.fireBtnNode.setScale(0.94, 0.94, 1));
-    this.fireBtnNode.on(Node.EventType.TOUCH_END, () => {
-      tween(this.fireBtnNode).to(0.08, { scale: new Vec3(1, 1, 1) }).start();
-      if (this.onFireCombo) this.onFireCombo();
-    });
-    this.fireBtnNode.on(Node.EventType.TOUCH_CANCEL, () => this.fireBtnNode.setScale(1, 1, 1));
+    const lblNode=new Node('DriveEvilLabel');this.fireBtnNode.addChild(lblNode);lblNode.setPosition(0,-2,0);
+    lblNode.addComponent(UITransform).setContentSize(92,52);
+    this.fireLabel=lblNode.addComponent(Label);this.fireLabel.string='驱邪';this.fireLabel.fontSize=19;this.fireLabel.lineHeight=22;
+    this.fireLabel.horizontalAlign=Label.HorizontalAlign.CENTER;this.fireLabel.verticalAlign=Label.VerticalAlign.CENTER;
+    this.fireLabel.overflow=Label.Overflow.SHRINK;this.fireLabel.color=new Color(255,233,182);
 
-    this.rollBtnNode = new Node('DodgeSealBtn');
-    this.rollBtnNode.addComponent(UITransform).setContentSize(82, 82);
-    this.rollBtnNode.setPosition(165, -315, 0);
-    actionRoot.addChild(this.rollBtnNode);
-    const rg = this.rollBtnNode.addComponent(Graphics);
-    rg.fillColor = new Color(19, 42, 58, 225); rg.roundRect(-38, -38, 76, 76, 16); rg.fill();
-    rg.strokeColor = new Color(130, 184, 180); rg.lineWidth = 2.5; rg.roundRect(-38, -38, 76, 76, 16); rg.stroke();
-    rg.strokeColor = new Color(230, 188, 102); rg.lineWidth = 2;
-    rg.moveTo(-18, 10); rg.bezierCurveTo(-2, 28, 15, 22, 19, 2);
-    rg.moveTo(-20, -10); rg.bezierCurveTo(-3, 5, 10, -2, 18, -18); rg.stroke();
-    const rollLbl = new Node('DodgeTxt'); this.rollBtnNode.addChild(rollLbl);
-    const rl = rollLbl.addComponent(Label); rl.string = '闪避'; rl.fontSize = 16; rl.color = new Color(228, 242, 225);
-    this.rollMaskNode = new Node('RollMask'); this.rollBtnNode.addChild(this.rollMaskNode); this.rollMaskNode.active = false;
-    this.rollBtnNode.on(Node.EventType.TOUCH_END, () => { if (this.onRoll) this.onRoll(); });
+    this.rollBtnNode=new Node('DodgeSealBtn');this.rollBtnNode.addComponent(UITransform).setContentSize(88,88);
+    this.rollBtnNode.setPosition(163,-313,0);actionRoot.addChild(this.rollBtnNode);
+    const rg=this.rollBtnNode.addComponent(Graphics);
+    rg.fillColor=new Color(15,41,58,236);rg.moveTo(0,43);rg.bezierCurveTo(29,35,43,15,40,-8);
+    rg.bezierCurveTo(35,-33,14,-43,-9,-39);rg.bezierCurveTo(-34,-34,-45,-11,-39,11);rg.bezierCurveTo(-31,33,-14,40,0,43);rg.fill();
+    rg.strokeColor=new Color(117,192,177);rg.lineWidth=2.4;rg.moveTo(0,39);rg.bezierCurveTo(28,31,38,13,35,-7);
+    rg.bezierCurveTo(30,-27,12,-36,-8,-34);rg.bezierCurveTo(-28,-30,-38,-10,-33,9);rg.bezierCurveTo(-27,27,-12,36,0,39);rg.stroke();
+    rg.strokeColor=new Color(231,190,105);rg.lineWidth=2;rg.moveTo(-17,10);rg.bezierCurveTo(-2,28,14,22,20,1);rg.moveTo(-18,-8);rg.bezierCurveTo(-1,5,9,-3,17,-20);rg.stroke();
+    const rollLbl=new Node('DodgeTxt');this.rollBtnNode.addChild(rollLbl);const rl=rollLbl.addComponent(Label);
+    rl.string='闪避';rl.fontSize=15;rl.lineHeight=17;rl.color=new Color(228,242,225);
+    this.rollMaskNode=new Node('RollMask');this.rollBtnNode.addChild(this.rollMaskNode);this.rollMaskNode.active=false;
 
-    this.kataBtnNode = new Node('LanternArrayBtn');
-    this.kataBtnNode.addComponent(UITransform).setContentSize(82, 82);
-    this.kataBtnNode.setPosition(270, -270, 0);
-    actionRoot.addChild(this.kataBtnNode);
-    this.kataEnergyG = this.kataBtnNode.addComponent(Graphics);
-    this.redrawKataBadge(0, 100);
-    this.kataBtnNode.on(Node.EventType.TOUCH_END, () => { if (this.onTriggerKata) this.onTriggerKata(); });
+    this.kataHaloNode=new Node('LanternHalo');this.kataHaloNode.setPosition(270,-268,0);actionRoot.addChild(this.kataHaloNode);
+    const kh=this.kataHaloNode.addComponent(Graphics);kh.strokeColor=new Color(213,170,83,120);kh.lineWidth=2;
+    for(let i=0;i<12;i++){const a=i*Math.PI/6;kh.moveTo(Math.cos(a)*43,Math.sin(a)*43);kh.lineTo(Math.cos(a)*51,Math.sin(a)*51);}kh.stroke();
+
+    this.kataBtnNode=new Node('LanternArrayBtn');this.kataBtnNode.addComponent(UITransform).setContentSize(86,86);
+    this.kataBtnNode.setPosition(270,-268,0);actionRoot.addChild(this.kataBtnNode);this.kataEnergyG=this.kataBtnNode.addComponent(Graphics);
+    this.redrawKataBadge(0,100);
+
+    this.fireBtnNode.on(Node.EventType.TOUCH_START,()=>this.fireBtnNode.setScale(.93,.93,1));
+    this.fireBtnNode.on(Node.EventType.TOUCH_END,()=>{tween(this.fireBtnNode).to(.08,{scale:new Vec3(1,1,1)}).start();if(this.onFireCombo)this.onFireCombo();});
+    this.fireBtnNode.on(Node.EventType.TOUCH_CANCEL,()=>this.fireBtnNode.setScale(1,1,1));
+    this.rollBtnNode.on(Node.EventType.TOUCH_START,()=>this.rollBtnNode.setScale(.92,.92,1));
+    this.rollBtnNode.on(Node.EventType.TOUCH_END,()=>{tween(this.rollBtnNode).to(.1,{scale:new Vec3(1,1,1)}).start();if(this.onRoll)this.onRoll();});
+    this.rollBtnNode.on(Node.EventType.TOUCH_CANCEL,()=>this.rollBtnNode.setScale(1,1,1));
+    this.kataBtnNode.on(Node.EventType.TOUCH_END,()=>{if(this.onTriggerKata)this.onTriggerKata();});
   }
 
   // 绘制灯阵徽章与能量外环
   redrawKataBadge(cur: number, max: number) {
-    const g = this.kataEnergyG; g.clear();
-    const ratio = Math.min(1, cur / max);
-    g.fillColor = new Color(16, 27, 52, 230); g.roundRect(-37, -37, 74, 74, 14); g.fill();
-    g.strokeColor = ratio >= 1 ? new Color(250, 209, 116) : new Color(118, 103, 81);
-    g.lineWidth = 3; g.roundRect(-37, -37, 74, 74, 14); g.stroke();
-    g.fillColor = ratio >= 1 ? new Color(255, 188, 84, 235) : new Color(115, 83, 55, 210);
-    g.moveTo(-13, 19); g.lineTo(13, 19); g.lineTo(18, -17); g.lineTo(-18, -17); g.close(); g.fill();
-    g.fillColor = new Color(255, 236, 173, ratio >= 1 ? 245 : 120); g.ellipse(0, 0, 12, 18); g.fill();
-    g.strokeColor = new Color(183, 55, 48); g.lineWidth = 1.8; g.moveTo(-8, 3); g.lineTo(8, -4); g.moveTo(-7, -6); g.lineTo(7, 7); g.stroke();
+    const g=this.kataEnergyG;g.clear();const ratio=Math.min(1,cur/max);
+    g.fillColor=new Color(14,26,53,238);
+    g.moveTo(0,40);g.lineTo(29,28);g.lineTo(40,0);g.lineTo(28,-30);g.lineTo(0,-40);g.lineTo(-30,-28);g.lineTo(-40,0);g.lineTo(-28,29);g.close();g.fill();
+    g.strokeColor=ratio>=1?new Color(250,209,116):new Color(118,103,81);g.lineWidth=2.8;
+    g.moveTo(0,38);g.lineTo(27,26);g.lineTo(38,0);g.lineTo(26,-27);g.lineTo(0,-38);g.lineTo(-27,-26);g.lineTo(-38,0);g.lineTo(-26,27);g.close();g.stroke();
+    g.fillColor=ratio>=1?new Color(255,188,84,235):new Color(115,83,55,210);
+    g.moveTo(-13,18);g.lineTo(13,18);g.lineTo(17,-16);g.lineTo(10,-23);g.lineTo(-10,-23);g.lineTo(-17,-16);g.close();g.fill();
+    g.strokeColor=new Color(226,185,95);g.lineWidth=1.5;g.moveTo(-8,12);g.lineTo(8,12);g.moveTo(-10,-17);g.lineTo(10,-17);g.stroke();
+    g.fillColor=new Color(255,236,173,ratio>=1?245:120);
+    g.moveTo(0,14);g.bezierCurveTo(10,5,8,-8,0,-14);g.bezierCurveTo(-8,-7,-9,5,0,14);g.fill();
+    g.strokeColor=new Color(183,55,48);g.lineWidth=1.8;g.moveTo(-7,3);g.lineTo(7,-4);g.moveTo(-6,-7);g.lineTo(6,7);g.stroke();
     Tween.stopAllByTarget(this.kataBtnNode);
-    if (ratio >= 1) tween(this.kataBtnNode).to(0.28,{scale:new Vec3(1.12,1.12,1)}).to(0.28,{scale:new Vec3(1,1,1)}).union().repeatForever().start();
+    if(ratio>=1)tween(this.kataBtnNode).to(.24,{scale:new Vec3(1.1,1.1,1)}).to(.24,{scale:new Vec3(1,1,1)}).union().repeatForever().start();
     else this.kataBtnNode.setScale(1,1,1);
   }
 
@@ -444,23 +410,18 @@ export class LanternHUD extends Component {
 
   // 刷新血量与护盾条
   updateHp(curHp: number, maxHp: number, curShield: number) {
-    const totalW = 124;
-
-    // 血条
-    this.hpBarG.clear();
-    const hpRatio = Math.max(0, curHp / maxHp);
-    this.hpBarG.fillColor = new Color(215, 45, 45);
-    this.hpBarG.roundRect(0, 0, totalW * hpRatio, 8, 2);
-    this.hpBarG.fill();
-
-    // 护盾条
-    this.shieldBarG.clear();
-    if (curShield > 0) {
-      const shieldRatio = Math.min(1.0, curShield / 40);
-      this.shieldBarG.fillColor = new Color(50, 150, 240);
-      this.shieldBarG.roundRect(0, 0, totalW * shieldRatio, 5, 1);
-      this.shieldBarG.fill();
+    const totalW=121;
+    this.hpBarG.clear();const hpRatio=Math.max(0,curHp/maxHp);
+    this.hpBarG.fillColor=new Color(62,23,34,220);this.hpBarG.moveTo(0,-1);this.hpBarG.lineTo(totalW,-1);this.hpBarG.lineTo(totalW-5,7);this.hpBarG.lineTo(5,8);this.hpBarG.close();this.hpBarG.fill();
+    if(hpRatio>0){
+      const w=totalW*hpRatio;this.hpBarG.fillColor=new Color(207,55,61,245);
+      this.hpBarG.moveTo(1,0);this.hpBarG.lineTo(Math.max(4,w),0);this.hpBarG.lineTo(Math.max(1,w-4),6);this.hpBarG.lineTo(5,7);this.hpBarG.close();this.hpBarG.fill();
+      this.hpBarG.strokeColor=new Color(246,144,126,150);this.hpBarG.lineWidth=1;this.hpBarG.moveTo(6,5);this.hpBarG.lineTo(Math.max(7,w-5),4);this.hpBarG.stroke();
     }
+    this.shieldBarG.clear();
+    if(curShield>0){const sw=totalW*Math.min(1,curShield/40);this.shieldBarG.strokeColor=new Color(102,201,218,230);this.shieldBarG.lineWidth=4;
+      this.shieldBarG.moveTo(1,0);this.shieldBarG.bezierCurveTo(sw*.35,3,sw*.65,-3,sw,0);this.shieldBarG.stroke();
+      this.shieldBarG.strokeColor=new Color(210,247,242,160);this.shieldBarG.lineWidth=1;this.shieldBarG.moveTo(3,2);this.shieldBarG.lineTo(Math.max(4,sw-3),2);this.shieldBarG.stroke();}
   }
 
   // 刷新灵火
@@ -630,4 +591,17 @@ export class LanternHUD extends Component {
   closeUpgrade() {
     this.upgradeModalNode.active = false;
   }
+  update(dt: number) {
+    this.hudPulse += dt;
+    if (this.fireAuraNode?.isValid) {
+      const p = 1 + Math.sin(this.hudPulse * 3.2) * 0.035;
+      this.fireAuraNode.setScale(p,p,1);
+      this.fireAuraNode.angle = Math.sin(this.hudPulse * 1.3) * 3;
+    }
+    if (this.kataHaloNode?.isValid) this.kataHaloNode.angle += dt * 18;
+    if (this.stickBaseNode?.isValid && !this.isJoyDragging) {
+      this.stickThumbNode.angle = Math.sin(this.hudPulse * 1.8) * 4;
+    }
+  }
+
 }
